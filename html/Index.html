@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>หน้าหลัก - Online Talk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        .neobrutalism-shadow {
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            border: 4px solid black;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .character-animation {
+            animation: bounce 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-[#f5f1e8]">
+    <!-- Header -->
+    <header class="bg-white border-b-4 border-black p-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-black rounded-xl flex items-center justify-center border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div class="w-6 h-6 border-2 border-white rounded-lg"></div>
+                </div>
+                <h1 class="text-2xl font-bold">Online Talk</h1>
+            </div>
+            <nav class="flex gap-2 items-center flex-wrap">
+                <a href="HomePage.html" class="px-4 py-2 bg-[#FFD93D] border-2 border-black rounded-lg hover:bg-[#ffd000]">🏠 หน้าหลัก</a>
+                <a href="SettingPage.html" class="px-4 py-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100">⚙️ ตั้งค่า</a>
+                <button id="adminBtn" class="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg hover:bg-red-600 hidden">🛡️ Admin</button>
+                <button id="logoutBtn" class="px-4 py-2 bg-black text-white border-2 border-black rounded-lg hover:bg-gray-800">ออกจากระบบ</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <section class="min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="max-w-2xl w-full">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl md:text-6xl font-bold mb-4">Online Talk</h1>
+                <p class="text-xl text-gray-600">พูดคุย ดื่ม และสนุกไปด้วยกัน</p>
+                <p class="text-sm text-gray-500 mt-2">ยินดีต้อนรับ <span id="userName" class="font-bold"></span>!</p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-6 mb-12">
+                <!-- สร้างห้อง -->
+                <button id="createRoomBtn" class="bg-[#FF6B9D] text-white border-4 border-black rounded-2xl p-8 neobrutalism-shadow hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all group">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-black group-hover:scale-110 transition-transform">
+                            <span class="text-3xl">+</span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">สร้างห้อง</h2>
+                            <p class="text-sm">เปิดห้องใหม่</p>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- จับคู่สุ่ม -->
+                <button id="randomMatchBtn" class="bg-[#6BCB77] text-white border-4 border-black rounded-2xl p-8 neobrutalism-shadow hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all group">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-black group-hover:scale-110 transition-transform">
+                            <span class="text-3xl">🎲</span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">จับคู่สุ่ม</h2>
+                            <p class="text-sm">สุ่มเข้าห้อง</p>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- ใส่โค้ด -->
+                <button id="joinRoomBtn" class="bg-[#FFD93D] text-black border-4 border-black rounded-2xl p-8 neobrutalism-shadow hover:translate-x-[4px] hover:translate-y-[4px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all group">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center border-4 border-black group-hover:scale-110 transition-transform">
+                            <span class="text-3xl">#</span>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold">ใส่โค้ด</h2>
+                            <p class="text-sm">เข้าห้องเพื่อน</p>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Character Animation -->
+            <div class="flex justify-center character-animation">
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                    <rect x="50" y="150" width="100" height="8" fill="#8B4513" stroke="black" stroke-width="3" rx="2"/>
+                    <ellipse cx="100" cy="130" rx="28" ry="35" fill="black"/>
+                    <ellipse cx="75" cy="120" rx="8" ry="18" fill="black" transform="rotate(-20 75 120)"/>
+                    <ellipse cx="125" cy="120" rx="8" ry="18" fill="black" transform="rotate(20 125 120)"/>
+                    <circle cx="100" cy="90" r="28" fill="white" stroke="black" stroke-width="3"/>
+                    <circle cx="92" cy="88" r="4" fill="black"/>
+                    <circle cx="108" cy="88" r="4" fill="black"/>
+                    <path d="M 85 98 Q 100 108 115 98" stroke="black" stroke-width="3" fill="none"/>
+                    <g transform="translate(135, 110)">
+                        <path d="M 0 0 L 8 0 L 7 20 L 1 20 Z" fill="#FFD700" stroke="black" stroke-width="2"/>
+                        <circle cx="4" cy="8" r="1.5" fill="white" opacity="0.7"/>
+                        <circle cx="5" cy="14" r="1" fill="white" opacity="0.7"/>
+                    </g>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- Room Type Modal -->
+    <div id="roomTypeModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">เลือกประเภทห้อง</h2>
+                <button id="closeRoomTypeModal" class="text-3xl hover:text-gray-600">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <button id="createOneOnOne" class="w-full bg-[#FFD93D] border-2 border-black rounded-lg p-4 text-left hover:bg-[#ffd000] transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                    <h3 class="font-bold text-lg">💬 One-on-One</h3>
+                    <p class="text-sm">คุยกันแค่ 2 คน</p>
+                </button>
+                <button id="createGroup" class="w-full bg-[#6BCB77] text-white border-2 border-black rounded-lg p-4 text-left hover:bg-[#5bb567] transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                    <h3 class="font-bold text-lg">👥 Group Chat</h3>
+                    <p class="text-sm">คุยกันหลายๆ คน (3-5 คน)</p>
+                </button>
+                <button id="createSpecial" class="w-full bg-[#FF6B9D] text-white border-2 border-black rounded-lg p-4 text-left hover:bg-[#ff5b8d] transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                    <h3 class="font-bold text-lg">✨ Special Event</h3>
+                    <p class="text-sm">ห้องพิเศษสำหรับกิจกรรม</p>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Join Room Modal -->
+    <div id="joinRoomModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">ใส่โค้ดห้อง</h2>
+                <button id="closeJoinRoomModal" class="text-3xl hover:text-gray-600">&times;</button>
+            </div>
+            <input type="text" id="roomCodeInput" placeholder="ABC123" maxlength="6" 
+                class="w-full text-center text-2xl tracking-wider border-2 border-black rounded-lg px-4 py-3 mb-4 uppercase focus:outline-none focus:ring-2 focus:ring-black">
+            <button id="joinRoomSubmit" class="w-full bg-black text-white border-2 border-black rounded-lg py-3 hover:bg-gray-800 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                เข้าร่วมห้อง
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
+            authDomain: "chat-online-project-187e9.firebaseapp.com",
+            databaseURL: "https://chat-online-project-187e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-online-project-187e9",
+            storageBucket: "chat-online-project-187e9.firebasestorage.app",
+            messagingSenderId: "238726912803",
+            appId: "1:238726912803:web:342c5669f6edd8cbb48a96",
+            measurementId: "G-SL9N8KG89G"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-100 border-green-500 text-green-700',
+                error: 'bg-red-100 border-red-500 text-red-700',
+                info: 'bg-blue-100 border-blue-500 text-blue-700'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `${colors[type]} border-2 rounded-lg p-4 mb-2 shadow-lg`;
+            toast.style.animation = 'slideIn 0.3s ease-out';
+            toast.textContent = message;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(400px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            return Array.from({length: 6}, () => 
+                chars[Math.floor(Math.random() * chars.length)]
+            ).join('');
+        }
+
+        // Check authentication
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'LoginPage.html';
+                return;
+            }
+
+            document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+
+            // Check if user is admin
+            const userRef = database.ref('users/' + user.uid);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            
+            if (userData && userData.isAdmin) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            }
+        });
+
+        // Modal Controls
+        document.getElementById('createRoomBtn').addEventListener('click', () => {
+            document.getElementById('roomTypeModal').classList.add('active');
+        });
+
+        document.getElementById('joinRoomBtn').addEventListener('click', () => {
+            document.getElementById('joinRoomModal').classList.add('active');
+        });
+
+        document.getElementById('closeRoomTypeModal').addEventListener('click', () => {
+            document.getElementById('roomTypeModal').classList.remove('active');
+        });
+
+        document.getElementById('closeJoinRoomModal').addEventListener('click', () => {
+            document.getElementById('joinRoomModal').classList.remove('active');
+        });
+
+        // Close modal on outside click
+        window.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // Create Room Functions
+        async function createRoom(type) {
+            const code = generateRoomCode();
+            const user = auth.currentUser;
+            
+            if (!user) return;
+
+            try {
+                await database.ref('rooms/' + code).set({
+                    code: code,
+                    type: type,
+                    createdBy: user.uid,
+                    createdAt: new Date().toISOString(),
+                    isActive: true,
+                    members: {[user.uid]: true}
+                });
+
+                document.getElementById('roomTypeModal').classList.remove('active');
+                showToast(`สร้างห้อง ${type} สำเร็จ! โค้ด: ${code}`, 'success');
+                
+                setTimeout(() => {
+                    window.location.href = `RoomPage.html?code=${code}&type=${type}`;
+                }, 1500);
+            } catch (error) {
+                console.error('Create room error:', error);
+                showToast('เกิดข้อผิดพลาดในการสร้างห้อง', 'error');
+            }
+        }
+
+        document.getElementById('createOneOnOne').addEventListener('click', () => createRoom('oneOnOne'));
+        document.getElementById('createGroup').addEventListener('click', () => createRoom('group'));
+        document.getElementById('createSpecial').addEventListener('click', () => createRoom('special'));
+
+        // Random Match
+        document.getElementById('randomMatchBtn').addEventListener('click', () => {
+            const code = generateRoomCode();
+            showToast('กำลังจับคู่สุ่มห้องให้คุณ...', 'info');
+            
+            setTimeout(() => {
+                window.location.href = `RoomPage.html?code=${code}&type=random`;
+            }, 2000);
+        });
+
+        // Join Room
+        document.getElementById('joinRoomSubmit').addEventListener('click', async () => {
+            const input = document.getElementById('roomCodeInput');
+            const code = input.value.trim().toUpperCase();
+            
+            if (code.length !== 6) {
+                showToast('กรุณากรอกโค้ดให้ครบ 6 ตัว', 'error');
+                return;
+            }
+
+            const roomRef = database.ref('rooms/' + code);
+            const snapshot = await roomRef.once('value');
+            
+            if (snapshot.exists()) {
+                document.getElementById('joinRoomModal').classList.remove('active');
+                showToast(`กำลังเข้าห้อง ${code}...`, 'info');
+                
+                setTimeout(() => {
+                    window.location.href = `RoomPage.html?code=${code}&type=join`;
+                }, 1500);
+            } else {
+                showToast('ไม่พบห้องนี้ กรุณาตรวจสอบโค้ดอีกครั้ง', 'error');
+            }
+        });
+
+        // Room Code Input Formatting
+        const roomCodeInput = document.getElementById('roomCodeInput');
+        roomCodeInput.addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        });
+
+        roomCodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('joinRoomSubmit').click();
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+                try {
+                    await auth.signOut();
+                    showToast('ออกจากระบบสำเร็จ', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'LoginPage.html';
+                    }, 1000);
+                } catch (error) {
+                    showToast('เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        });
+
+        // Admin Button
+        document.getElementById('adminBtn').addEventListener('click', () => {
+            window.location.href = 'AdminPanel.html';
+        });
+    </script>
+</body>
+</html> 

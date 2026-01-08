@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โปรไฟล์และการตั้งค่า - Online Talk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <style>
+        /* Base styles */
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .neobrutalism-shadow {
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+        }
+        
+        .tab-btn.active {
+            background-color: #FFD93D;
+            border-bottom: 4px solid black;
+            margin-bottom: -1px;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.4); }
+            50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.8); }
+        }
+        
+        #avatarInput {
+            display: none;
+        }
+        
+        /* Theme Cream (Default) */
+        body {
+            background-color: #f5f1e8;
+        }
+        
+        /* Theme White */
+        body.theme-white {
+            background-color: #ffffff;
+        }
+        
+        /* Theme Dark - Enhanced with gradients */
+        body.theme-dark {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+        }
+        
+        body.theme-dark * {
+            color: #f9fafb;
+        }
+        
+        body.theme-dark header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+            border-color: #475569 !important;
+        }
+        
+        body.theme-dark .card-white {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+            border-color: #475569 !important;
+        }
+        
+        body.theme-dark .secondary-card {
+            background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+            border-color: #64748b !important;
+        }
+        
+        body.theme-dark .text-gray-600,
+        body.theme-dark .text-gray-500,
+        body.theme-dark .text-gray-700 {
+            color: #cbd5e1 !important;
+        }
+        
+        body.theme-dark .border-black {
+            border-color: #64748b !important;
+        }
+        
+        body.theme-dark .neobrutalism-shadow {
+            box-shadow: 8px 8px 0px 0px rgba(100, 116, 139, 0.5);
+        }
+        
+        body.theme-dark input:not([type="checkbox"]):not([type="file"]) {
+            background-color: #0f172a !important;
+            color: #f9fafb !important;
+            border-color: #475569 !important;
+        }
+        
+        body.theme-dark .bg-blue-50 {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+        }
+        
+        body.theme-dark .text-blue-800 {
+            color: #93c5fd !important;
+        }
+        
+        body.theme-dark .border-blue-300,
+        body.theme-dark .border-blue-400 {
+            border-color: #3b82f6 !important;
+        }
+        
+        body.theme-dark .tab-btn.active {
+            background: linear-gradient(135deg, #fbbf24 0%, #FFD93D 100%) !important;
+            color: #000 !important;
+        }
+        
+        body.theme-dark .tab-btn {
+            color: #f9fafb;
+            background: rgba(51, 65, 85, 0.5);
+        }
+        
+        body.theme-dark .tab-btn:hover:not(.active) {
+            background: rgba(71, 85, 105, 0.8);
+        }
+        
+        body.theme-dark .bg-green-400,
+        body.theme-dark .bg-red-400,
+        body.theme-dark .bg-orange-400,
+        body.theme-dark .bg-blue-400 {
+            color: #000 !important;
+        }
+        
+        body.theme-dark .bg-gradient-to-r {
+            background: linear-gradient(135deg, #312e81 0%, #1e40af 100%) !important;
+        }
+        
+        /* Enhanced Theme Selector */
+        .theme-selector {
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .theme-selector::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+        
+        .theme-selector:hover::before {
+            transform: translateX(100%);
+        }
+        
+        .theme-selector.selected {
+            box-shadow: 0 0 0 4px #10b981, 0 0 30px rgba(16, 185, 129, 0.5);
+            animation: glow 2s infinite;
+        }
+        
+        .theme-selector.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 3px solid white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            animation: float 2s ease-in-out infinite;
+        }
+        
+        /* Dark theme selector special styling */
+        body.theme-dark .theme-selector#themeDark {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+        }
+        
+        body.theme-dark .theme-selector#themeDark .theme-preview-box {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+        
+        /* Hover effects */
+        .setting-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .theme-info-box {
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Animations */
+        @keyframes shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        
+        .theme-card-glow {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 3s infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="card-white bg-white border-b-4 border-black p-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-2xl font-bold">Online Talk</h1>
+            <a href="Index.html" class="px-4 py-2 card-white bg-white border-2 border-black rounded-lg hover:bg-gray-100">
+                ← กลับ
+            </a>
+        </div>
+    </header>
+
+    <div class="max-w-4xl mx-auto px-4 py-6">
+        <!-- Profile Header -->
+        <div class="card-white bg-white border-4 border-black rounded-2xl p-8 neobrutalism-shadow mb-6">
+            <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <!-- Avatar -->
+                <div class="relative">
+                    <div id="avatarContainer" class="w-32 h-32 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center border-4 border-black overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                        <svg width="80" height="80" viewBox="0 0 80 80">
+                            <circle cx="40" cy="40" r="30" fill="white" />
+                            <circle cx="32" cy="36" r="4" fill="black" />
+                            <circle cx="48" cy="36" r="4" fill="black" />
+                            <path d="M 28 48 Q 40 56 52 48" stroke="black" stroke-width="3" fill="none" />
+                        </svg>
+                    </div>
+                    <input type="file" id="avatarInput" accept="image/*">
+                    <button id="uploadAvatarBtn" class="absolute bottom-0 right-0 w-10 h-10 bg-[#FFD93D] border-2 border-black rounded-full flex items-center justify-center hover:bg-[#ffd000] transition-colors shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                        📷
+                    </button>
+                    <div id="uploadProgress" class="hidden absolute inset-0 bg-black/70 rounded-full flex items-center justify-center">
+                        <div class="text-white text-sm font-bold" id="progressText">0%</div>
+                    </div>
+                </div>
+
+                <!-- Profile Info -->
+                <div class="flex-1 text-center md:text-left w-full">
+                    <div class="flex items-center gap-2 mb-2 justify-center md:justify-start">
+                        <h1 id="profileUsername" class="text-3xl font-bold">กำลังโหลด...</h1>
+                        <button id="editNameBtn" class="p-1 hover:bg-gray-100 rounded-lg transition-colors">
+                            ✏️
+                        </button>
+                    </div>
+                    
+                    <p id="profileEmail" class="text-gray-600 mb-4">email@example.com</p>
+                    
+                    <div class="flex items-center gap-2 justify-center md:justify-start flex-wrap">
+                        <span class="inline-block bg-green-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                            🟢 ออนไลน์
+                        </span>
+                        <span id="adminBadge" class="hidden inline-block bg-red-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                            🛡️ Admin
+                        </span>
+                        <span id="privacyBadge" class="inline-block bg-blue-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
+                            🌐 สาธารณะ
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
+                <div class="text-3xl mb-2">⏱️</div>
+                <p class="text-xs text-gray-600 mb-1">เวลาออนไลน์</p>
+                <p id="onlineTime" class="text-xl font-bold">0 นาที</p>
+            </div>
+            
+            <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
+                <div class="text-3xl mb-2">💥</div>
+                <p class="text-xs text-gray-600 mb-1">เพื่อน</p>
+                <p id="friendCount" class="text-xl font-bold">0</p>
+            </div>
+            
+            <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
+                <div class="text-3xl mb-2">⭐</div>
+                <p class="text-xs text-gray-600 mb-1">ห้องที่เข้าร่วม</p>
+                <p id="roomsJoined" class="text-xl font-bold">0</p>
+            </div>
+            
+            <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
+                <div class="text-3xl mb-2">🏆</div>
+                <p class="text-xs text-gray-600 mb-1">คะแนน</p>
+                <p id="points" class="text-xl font-bold">0</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card-white bg-white border-4 border-black rounded-2xl neobrutalism-shadow overflow-hidden">
+            <!-- Tab Headers -->
+            <div class="flex overflow-x-auto border-b-4 border-black">
+                <button class="tab-btn active px-6 py-4 border-r-2 border-black font-bold" data-tab="settings">
+                    ⚙️ การตั้งค่า
+                </button>
+                <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold" data-tab="account">
+                    🔐 บัญชี
+                </button>
+                <button class="tab-btn px-6 py-4 font-bold" data-tab="about">
+                    ℹ️ เกี่ยวกับ
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-6">
+                <!-- Settings Tab -->
+                <div id="settingsTab" class="tab-content">
+                    <h3 class="text-xl font-bold mb-4">⚙️ การตั้งค่าทั่วไป</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Theme -->
+                        <div class="secondary-card bg-gray-50 border-2 border-black rounded-xl p-6">
+                            <h4 class="text-lg font-bold mb-2 flex items-center gap-2">
+                                🎨 ธีม
+                                <span class="text-sm font-normal text-gray-600">(เปลี่ยนธีมทั้งเว็บไซต์)</span>
+                            </h4>
+                            <p class="text-sm text-gray-600 mb-4">เลือกธีมที่คุณชอบ การตั้งค่าจะถูกบันทึกและใช้กับทุกหน้า</p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Cream Theme -->
+                                <button id="themeCream" class="theme-selector bg-[#f5f1e8] border-3 border-black rounded-xl p-4 hover:scale-105 transition-all">
+                                    <div class="theme-preview-box w-full aspect-square bg-white border-2 border-black rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-[#f5f1e8] via-white to-[#f5f1e8]"></div>
+                                        <div class="relative w-12 h-12 bg-gradient-to-br from-[#FFD93D] to-[#fbbf24] rounded-full border-2 border-black shadow-lg"></div>
+                                    </div>
+                                    <p class="text-base font-bold text-black">☕ ครีม</p>
+                                    <p class="text-xs text-gray-700">อบอุ่น ผ่อนคลาย</p>
+                                </button>
+                                
+                                <!-- White Theme -->
+                                <button id="themeWhite" class="theme-selector bg-white border-3 border-black rounded-xl p-4 hover:scale-105 transition-all">
+                                    <div class="theme-preview-box w-full aspect-square bg-gray-50 border-2 border-black rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-white"></div>
+                                        <div class="relative w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full border-2 border-black shadow-lg"></div>
+                                    </div>
+                                    <p class="text-base font-bold text-black">☀️ ขาว</p>
+                                    <p class="text-xs text-gray-700">สะอาด สดใส</p>
+                                </button>
+                                
+                                <!-- Dark Theme -->
+                                <button id="themeDark" class="theme-selector bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 border-3 border-black rounded-xl p-4 hover:scale-105 transition-all">
+                                    <div class="theme-preview-box w-full aspect-square bg-gradient-to-br from-gray-700 to-gray-900 border-2 border-gray-500 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                                        <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155]"></div>
+                                        <div class="relative w-12 h-12 bg-gradient-to-br from-purple-500 via-purple-600 to-pink-500 rounded-full border-2 border-gray-400 shadow-lg shadow-purple-500/50"></div>
+                                    </div>
+                                    <p class="text-base font-bold text-white">🌙 มืด</p>
+                                    <p class="text-xs text-gray-300">นุ่มตา สบายตา</p>
+                                </button>
+                            </div>
+                            
+                            <div class="mt-4 p-4 bg-blue-50 border-2 border-blue-300 rounded-lg theme-info-box">
+                                <p class="text-sm text-blue-800 flex items-start gap-2">
+                                    <span class="text-lg">💡</span>
+                                    <span><strong>เคล็ดลับ:</strong> ธีมที่เลือกจะถูกบันทึกอัตโนมัติและใช้กับทุกหน้าในเว็บไซต์ รวมถึง Index, Room, Login และอื่นๆ</span>
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Settings -->
+                        <div class="secondary-card bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-black rounded-xl p-6 setting-card">
+                            <h4 class="text-lg font-bold mb-4">🔒 ความเป็นส่วนตัว</h4>
+                            
+                            <div class="space-y-3">
+                                <label class="flex items-center justify-between p-4 card-white bg-white border-2 border-black rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                    <div>
+                                        <p class="font-bold">โปรไฟล์เป็นส่วนตัว</p>
+                                        <p class="text-sm text-gray-600">มีเฉพาะเพื่อนเท่านั้นที่มองเห็นโปรไฟล์ของคุณ</p>
+                                    </div>
+                                    <input type="checkbox" id="privateToggle" class="w-6 h-6" />
+                                </label>
+
+                                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                                    <p class="text-sm text-blue-800">
+                                        <strong>สาธารณะ:</strong> ทุกคนเห็นโปรไฟล์ของคุณ<br>
+                                        <strong>เป็นส่วนตัว:</strong> เฉพาะเพื่อนเท่านั้นที่เห็นโปรไฟล์
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div class="secondary-card bg-gray-50 border-2 border-black rounded-xl p-6 setting-card">
+                            <h4 class="text-lg font-bold mb-4">🔔 การแจ้งเตือน</h4>
+                            <label class="flex items-center justify-between p-4 card-white bg-white border-2 border-black rounded-lg mb-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div>
+                                    <p class="font-bold">เปิดการแจ้งเตือน</p>
+                                    <p class="text-sm text-gray-600">รับการแจ้งเตือนเมื่อมีคนเชิญเข้าห้อง</p>
+                                </div>
+                                <input type="checkbox" id="notificationToggle" class="w-6 h-6" checked />
+                            </label>
+                            <label class="flex items-center justify-between p-4 card-white bg-white border-2 border-black rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div>
+                                    <p class="font-bold">เสียงเอฟเฟค</p>
+                                    <p class="text-sm text-gray-600">เล่นเสียงเมื่อมีข้อความใหม่</p>
+                                </div>
+                                <input type="checkbox" id="soundToggle" class="w-6 h-6" checked />
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Tab -->
+                <div id="accountTab" class="tab-content hidden">
+                    <h3 class="text-xl font-bold mb-4">🔐 จัดการบัญชี</h3>
+                    
+                    <div class="space-y-4">
+                        <button onclick="changePassword()" class="w-full card-white bg-white border-2 border-black rounded-lg px-6 py-3 text-left hover:bg-gray-50 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                            <p class="font-bold">🔑 เปลี่ยนรหัสผ่าน</p>
+                            <p class="text-sm text-gray-600">อัพเดทรหัสผ่านของคุณ</p>
+                        </button>
+                        
+                        <button onclick="logout()" class="w-full card-white bg-white border-2 border-black rounded-lg px-6 py-3 text-left hover:bg-gray-50 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                            <p class="font-bold">🚪 ออกจากระบบ</p>
+                            <p class="text-sm text-gray-600">ออกจากบัญชีของคุณ</p>
+                        </button>
+                        
+                        <button onclick="deleteAccount()" class="w-full bg-red-100 border-2 border-red-600 text-red-600 rounded-lg px-6 py-3 text-left hover:bg-red-200 transition-all shadow-[3px_3px_0px_0px_rgba(220,38,38,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(220,38,38,1)]">
+                            <p class="font-bold">🗑️ ลบบัญชี</p>
+                            <p class="text-sm">ลบบัญชีถาวร (ไม่สามารถกู้คืนได้)</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- About Tab -->
+                <div id="aboutTab" class="tab-content hidden">
+                    <h3 class="text-xl font-bold mb-4">ℹ️ เกี่ยวกับ Online Talk</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="secondary-card bg-gray-50 border-2 border-black rounded-xl p-6">
+                            <h4 class="text-lg font-bold mb-2">Online Talk</h4>
+                            <p class="text-sm text-gray-600 mb-4">
+                                แพลตฟอร์มสนทนาออนไลน์ที่ทำให้การพูดคุยเป็นเรื่องสนุก
+                                พบปะเพื่อนใหม่ แชร์เรื่องราว และสร้างความทรงจำดีๆ ไปด้วยกัน
+                            </p>
+                            <p class="text-xs text-gray-500">เวอร์ชัน 1.0.0</p>
+                        </div>
+
+                        <div class="secondary-card bg-gray-50 border-2 border-black rounded-xl p-6">
+                            <h4 class="text-lg font-bold mb-2">📞 ติดต่อเรา</h4>
+                            <p class="text-sm text-gray-600">
+                                📧 Email: support@onlinetalk.com<br>
+                                🌐 Website: www.onlinetalk.com<br>
+                                💬 Facebook: @OnlineTalkOfficial
+                            </p>
+                        </div>
+
+                        <div class="bg-blue-50 border-2 border-blue-400 rounded-xl p-6">
+                            <h4 class="text-lg font-bold mb-2">💡 เทคโนโลยี</h4>
+                            <p class="text-sm text-gray-600">
+                                • Firebase Authentication<br>
+                                • Firebase Realtime Database<br>
+                                • Firebase Storage<br>
+                                • Tailwind CSS<br>
+                                • WebRTC
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
+            authDomain: "chat-online-project-187e9.firebaseapp.com",
+            databaseURL: "https://chat-online-project-187e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-online-project-187e9",
+            storageBucket: "chat-online-project-187e9.firebasestorage.app",
+            messagingSenderId: "238726912803",
+            appId: "1:238726912803:web:a3d869aed8e17e9d06fd2c"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const storage = firebase.storage();
+        let currentUser = null;
+
+        // Load theme from localStorage on page load
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('siteTheme') || 'cream';
+            applyTheme(savedTheme);
+        }
+
+        // Apply theme to body and update UI
+        function applyTheme(theme) {
+            document.body.className = '';
+            
+            if (theme === 'white') {
+                document.body.classList.add('theme-white');
+            } else if (theme === 'dark') {
+                document.body.classList.add('theme-dark');
+            }
+            // cream is default (no class needed)
+            
+            // Update selected theme in UI
+            document.querySelectorAll('.theme-selector').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            const themeMap = {
+                'cream': 'themeCream',
+                'white': 'themeWhite',
+                'dark': 'themeDark'
+            };
+            
+            const selectedBtn = document.getElementById(themeMap[theme]);
+            if (selectedBtn) {
+                selectedBtn.classList.add('selected');
+            }
+        }
+
+        // Save theme to localStorage and Firebase
+        async function saveTheme(theme) {
+            localStorage.setItem('siteTheme', theme);
+            applyTheme(theme);
+            
+            if (currentUser) {
+                try {
+                    await database.ref('users/' + currentUser.uid).update({ theme: theme });
+                    showToast('เปลี่ยนธีมสำเร็จ! ธีมจะถูกใช้กับทุกหน้า 🎨', 'success');
+                } catch (error) {
+                    console.error('Error saving theme:', error);
+                }
+            }
+        }
+
+        // Initialize theme on page load
+        loadSavedTheme();
+
+        // Theme button handlers
+        document.getElementById('themeCream').addEventListener('click', () => saveTheme('cream'));
+        document.getElementById('themeWhite').addEventListener('click', () => saveTheme('white'));
+        document.getElementById('themeDark').addEventListener('click', () => saveTheme('dark'));
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColors = {
+                success: 'bg-green-400',
+                error: 'bg-red-400',
+                info: 'bg-blue-400',
+                warning: 'bg-orange-400'
+            };
+
+            toast.className = `${bgColors[type]} border-2 border-black rounded-lg px-6 py-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-black font-bold`;
+            toast.textContent = message;
+
+            document.getElementById('toastContainer').appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = 'LoginPage.html';
+                return;
+            }
+
+            currentUser = user;
+            loadUserProfile(user);
+        });
+
+        function loadUserProfile(user) {
+            database.ref('users/' + user.uid).once('value').then(snapshot => {
+                const userData = snapshot.val() || {};
+
+                document.getElementById('profileUsername').textContent = userData.username || user.displayName || 'ผู้ใช้';
+                document.getElementById('profileEmail').textContent = user.email;
+                
+                document.getElementById('onlineTime').textContent = `${userData.onlineTime || 0} นาที`;
+                document.getElementById('friendCount').textContent = userData.friends ? userData.friends.length : 0;
+                document.getElementById('roomsJoined').textContent = userData.roomsJoined || 0;
+                document.getElementById('points').textContent = userData.points || 0;
+
+                if (userData.isAdmin) {
+                    document.getElementById('adminBadge').classList.remove('hidden');
+                }
+
+                const privateToggle = document.getElementById('privateToggle');
+                privateToggle.checked = userData.isPrivate || false;
+                updatePrivacyBadge(userData.isPrivate);
+
+                document.getElementById('notificationToggle').checked = userData.notifications !== false;
+                document.getElementById('soundToggle').checked = userData.soundEffects !== false;
+
+                // Load user's saved theme
+                if (userData.theme) {
+                    applyTheme(userData.theme);
+                }
+
+                loadAvatar(user, userData);
+            });
+        }
+
+        function loadAvatar(user, userData) {
+            const avatarContainer = document.getElementById('avatarContainer');
+            
+            if (userData.photoURL) {
+                avatarContainer.innerHTML = `<img src="${userData.photoURL}" alt="Avatar" class="w-full h-full object-cover" />`;
+            } else if (user.photoURL) {
+                avatarContainer.innerHTML = `<img src="${user.photoURL}" alt="Avatar" class="w-full h-full object-cover" />`;
+            }
+        }
+
+        document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
+            document.getElementById('avatarInput').click();
+        });
+
+        document.getElementById('avatarInput').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('กรุณาเลือกไฟล์รูปภาพ', 'error');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('ไฟล์ใหญ่เกินไป (สูงสุด 5MB)', 'error');
+                return;
+            }
+
+            try {
+                const progressDiv = document.getElementById('uploadProgress');
+                const progressText = document.getElementById('progressText');
+                progressDiv.classList.remove('hidden');
+
+                const storageRef = storage.ref(`avatars/${currentUser.uid}/${Date.now()}_${file.name}`);
+                const uploadTask = storageRef.put(file);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressText.textContent = Math.round(progress) + '%';
+                    },
+                    (error) => {
+                        console.error('Upload error:', error);
+                        showToast('เกิดข้อผิดพลาดในการอัพโหลด', 'error');
+                        progressDiv.classList.add('hidden');
+                    },
+                    async () => {
+                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                        
+                        await currentUser.updateProfile({ photoURL: downloadURL });
+                        await database.ref('users/' + currentUser.uid).update({ photoURL: downloadURL });
+
+                        document.getElementById('avatarContainer').innerHTML = 
+                            `<img src="${downloadURL}" alt="Avatar" class="w-full h-full object-cover" />`;
+
+                        progressDiv.classList.add('hidden');
+                        showToast('อัพโหลดรูปภาพสำเร็จ! 🎉', 'success');
+                    }
+                );
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('เกิดข้อผิดพลาดในการอัพโหลด', 'error');
+            }
+        });
+
+        function updatePrivacyBadge(isPrivate) {
+            const badge = document.getElementById('privacyBadge');
+            if (isPrivate) {
+                badge.textContent = '🔒 เป็นส่วนตัว';
+                badge.className = 'inline-block bg-orange-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black';
+            } else {
+                badge.textContent = '🌐 สาธารณะ';
+                badge.className = 'inline-block bg-blue-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black';
+            }
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+                btn.classList.add('active');
+                const tabId = btn.getAttribute('data-tab') + 'Tab';
+                document.getElementById(tabId).classList.remove('hidden');
+            });
+        });
+
+        document.getElementById('editNameBtn').addEventListener('click', async () => {
+            const newName = prompt('ป้อนชื่อใหม่:', currentUser.displayName || '');
+            if (newName && newName.trim()) {
+                try {
+                    await currentUser.updateProfile({ displayName: newName.trim() });
+                    await database.ref('users/' + currentUser.uid).update({ username: newName.trim() });
+                    document.getElementById('profileUsername').textContent = newName.trim();
+                    showToast('เปลี่ยนชื่อสำเร็จ!', 'success');
+                } catch (error) {
+                    showToast('เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        });
+
+        document.getElementById('notificationToggle').addEventListener('change', async (e) => {
+            try {
+                await database.ref('users/' + currentUser.uid).update({ notifications: e.target.checked });
+                showToast(e.target.checked ? 'เปิดการแจ้งเตือน' : 'ปิดการแจ้งเตือน', 'info');
+            } catch (error) {
+                showToast('เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        document.getElementById('soundToggle').addEventListener('change', async (e) => {
+            try {
+                await database.ref('users/' + currentUser.uid).update({ soundEffects: e.target.checked });
+                showToast(e.target.checked ? 'เปิดเสียงเอฟเฟค' : 'ปิดเสียงเอฟเฟค', 'info');
+            } catch (error) {
+                showToast('เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        document.getElementById('privateToggle').addEventListener('change', async (e) => {
+            try {
+                const isPrivate = e.target.checked;
+                await database.ref('users/' + currentUser.uid).update({ isPrivate: isPrivate });
+                updatePrivacyBadge(isPrivate);
+                showToast(isPrivate ? 'เปลี่ยนเป็นโปรไฟล์ส่วนตัว (เพื่อนเท่านั้นที่เห็น)' : 'เปลี่ยนเป็นโปรไฟล์สาธารณะ (ทุกคนเห็น)', 'success');
+            } catch (error) {
+                showToast('เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        function changePassword() {
+            const email = currentUser.email;
+            if (confirm('ต้องการรีเซ็ตรหัสผ่านหรือไม่?\n\nระบบจะส่งอีเมลสำหรับรีเซ็ตรหัสผ่านไปที่ ' + email)) {
+                auth.sendPasswordResetEmail(email)
+                    .then(() => {
+                        showToast('ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว กรุณาตรวจสอบอีเมลของคุณ', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Password reset error:', error);
+                        showToast('เกิดข้อผิดพลาดในการส่งอีเมล', 'error');
+                    });
+            }
+        }
+
+        async function logout() {
+            if (confirm('ต้องการออกจากระบบหรือไม่?')) {
+                try {
+                    await auth.signOut();
+                    showToast('ออกจากระบบสำเร็จ', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'LoginPage.html';
+                    }, 1000);
+                } catch (error) {
+                    showToast('เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        }
+
+        function deleteAccount() {
+            const confirmed = confirm('คุณแน่ใจหรือไม่ที่จะลบบัญชี?\n\nการกระทำนี้ไม่สามารถย้อนกลับได้');
+            
+            if (confirmed) {
+                const doubleConfirm = prompt('พิมพ์ "DELETE" เพื่อยืนยันการลบบัญชี:');
+                
+                if (doubleConfirm === 'DELETE') {
+                    database.ref('users/' + currentUser.uid).remove()
+                        .then(() => currentUser.delete())
+                        .then(() => {
+                            showToast('ลบบัญชีสำเร็จ', 'success');
+                            setTimeout(() => {
+                                window.location.href = 'LoginPage.html';
+                            }, 1500);
+                        })
+                        .catch((error) => {
+                            console.error('Delete error:', error);
+                            showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+                        });
+                } else {
+                    showToast('ยกเลิกการลบบัญชี', 'info');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

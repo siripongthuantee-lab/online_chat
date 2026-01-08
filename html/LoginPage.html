@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - Online Talk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        .neobrutalism-shadow {
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+        }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-[#f5f1e8] min-h-screen flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md">
+        <!-- Logo/Header -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 bg-black rounded-2xl mx-auto mb-4 flex items-center justify-center border-4 border-black neobrutalism-shadow">
+                <div class="w-12 h-12 border-4 border-white rounded-lg"></div>
+            </div>
+            <h1 class="text-4xl font-bold mb-2">Online Talk</h1>
+            <p class="text-gray-600">ยินดีต้อนรับกลับมา!</p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="bg-white border-4 border-black rounded-2xl p-8 neobrutalism-shadow mb-6">
+            <h2 class="text-2xl font-bold mb-6 text-center">เข้าสู่ระบบ</h2>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="bg-red-100 border-2 border-red-500 rounded-lg p-3 text-red-700 text-sm mb-4 hidden"></div>
+
+            <form id="loginForm" class="space-y-4">
+                <!-- Email Input -->
+                <div>
+                    <label class="block mb-2 text-sm font-bold">อีเมล</label>
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="your@email.com"
+                        class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                        required
+                    />
+                </div>
+
+                <!-- Password Input -->
+                <div>
+                    <label class="block mb-2 text-sm font-bold">รหัสผ่าน</label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="password"
+                            placeholder="••••••••"
+                            class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
+                            required
+                        />
+                        <button
+                            type="button"
+                            id="togglePassword"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 border-2 border-black rounded">
+                        <span>จดจำฉันไว้</span>
+                    </label>
+                    <button type="button" class="text-gray-600 hover:text-black underline">
+                        ลืมรหัสผ่าน?
+                    </button>
+                </div>
+
+                <!-- Login Button -->
+                <button
+                    type="submit"
+                    class="w-full bg-black text-white border-2 border-black rounded-lg py-3 font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                >
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t-2 border-black"></div>
+                </div>
+                <div class="relative flex justify-center">
+                    <span class="bg-white px-4 text-sm text-gray-600">หรือ</span>
+                </div>
+            </div>
+
+            <!-- Google Login -->
+            <button
+                id="googleLogin"
+                type="button"
+                class="w-full bg-white border-2 border-black rounded-lg py-3 hover:bg-gray-50 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2"
+            >
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                <span class="font-bold">เข้าสู่ระบบด้วย Google</span>
+            </button>
+
+            <!-- Demo Account Info -->
+            <div class="mt-4 p-3 bg-blue-50 border-2 border-blue-400 rounded-lg text-sm">
+                <p class="text-blue-700">หากไม่มีบัญชี สามารถกดปุ่ม "สมัครสมาชิก" ด้านล่าง หรือเข้าสู่ระบบด้วย Google</p>
+            </div>
+        </div>
+
+        <!-- Register Link -->
+        <div class="text-center">
+            <p class="text-gray-600">
+                ยังไม่มีบัญชี? 
+                <a href="#" id="registerLink" class="text-black font-bold underline hover:no-underline">
+                    สมัครสมาชิก
+                </a>
+            </p>
+        </div>
+
+        <!-- Character -->
+        <div class="mt-8 flex justify-center">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="40" fill="white" stroke="black" stroke-width="3" />
+                <circle cx="50" cy="55" r="4" fill="black" />
+                <circle cx="70" cy="55" r="4" fill="black" />
+                <path d="M 45 70 Q 60 78 75 70" stroke="black" stroke-width="3" fill="none" />
+                <path d="M 85 50 L 95 50 L 93 65 L 87 65 Z" fill="#87CEEB" stroke="black" stroke-width="2" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        console.log('Script loaded');
+
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
+            authDomain: "chat-online-project-187e9.firebaseapp.com",
+            databaseURL: "https://chat-online-project-187e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-online-project-187e9",
+            storageBucket: "chat-online-project-187e9.firebasestorage.app",
+            messagingSenderId: "238726912803",
+            appId: "1:238726912803:web:342c5669f6edd8cbb48a96",
+            measurementId: "G-SL9N8KG89G"
+        };
+
+        // Initialize Firebase
+        try {
+            firebase.initializeApp(firebaseConfig);
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+        }
+
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Show Toast
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: 'bg-green-100 border-green-500 text-green-700',
+                error: 'bg-red-100 border-red-500 text-red-700',
+                info: 'bg-blue-100 border-blue-500 text-blue-700'
+            };
+            
+            const toast = document.createElement('div');
+            toast.className = `${colors[type]} border-2 rounded-lg p-4 mb-2 shadow-lg`;
+            toast.style.animation = 'slideIn 0.3s ease-out';
+            toast.textContent = message;
+            
+            document.getElementById('toastContainer').appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(400px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Show Error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            if (errorDiv) {
+                errorDiv.classList.add('hidden');
+            }
+        }
+
+        // Toggle Password Visibility
+        const togglePasswordBtn = document.getElementById('togglePassword');
+        if (togglePasswordBtn) {
+            togglePasswordBtn.addEventListener('click', function() {
+                const passwordInput = document.getElementById('password');
+                const type = passwordInput.type === 'password' ? 'text' : 'password';
+                passwordInput.type = type;
+                this.textContent = type === 'password' ? '👁️' : '🙈';
+            });
+        }
+
+        // Login Form Submit
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideError();
+
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+
+                console.log('Attempting login with:', email);
+
+                if (!email || !password) {
+                    showError('กรุณากรอกอีเมลและรหัสผ่าน');
+                    return;
+                }
+
+                try {
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    console.log('Login successful:', userCredential.user);
+                    showToast('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับมา 🎉', 'success');
+                    
+                    // Update last login
+                    await database.ref('users/' + userCredential.user.uid).update({
+                        lastLogin: new Date().toISOString()
+                    });
+
+                    setTimeout(() => {
+                        window.location.href = 'Index.html';
+                    }, 1500);
+                } catch (error) {
+                    console.error('Login error:', error);
+                    let errorMessage = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+                    
+                    switch (error.code) {
+                        case 'auth/invalid-email':
+                            errorMessage = 'อีเมลไม่ถูกต้อง';
+                            break;
+                        case 'auth/user-disabled':
+                            errorMessage = 'บัญชีผู้ใช้ถูกปิดใช้งาน';
+                            break;
+                        case 'auth/user-not-found':
+                            errorMessage = 'ไม่พบบัญชีผู้ใช้ด้วยอีเมลนี้';
+                            break;
+                        case 'auth/wrong-password':
+                            errorMessage = 'รหัสผ่านไม่ถูกต้อง';
+                            break;
+                        case 'auth/invalid-credential':
+                            errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                            break;
+                        case 'auth/too-many-requests':
+                            errorMessage = 'มีการพยายามเข้าสู่ระบบมากเกินไป กรุณารอสักครู่';
+                            break;
+                    }
+                    
+                    showError(errorMessage);
+                    showToast(errorMessage, 'error');
+                }
+            });
+        }
+
+        // Google Login
+        const googleLoginBtn = document.getElementById('googleLogin');
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', async () => {
+                hideError();
+                console.log('Google login clicked');
+                
+                try {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    provider.setCustomParameters({
+                        prompt: 'select_account'
+                    });
+                    
+                    console.log('Opening Google popup...');
+                    const result = await auth.signInWithPopup(provider);
+                    
+                    console.log('Google login successful:', result.user);
+                    showToast('เข้าสู่ระบบด้วย Google สำเร็จ! 🎉', 'success');
+                    
+                    const user = result.user;
+
+                    // Save/Update user to database
+                    const userRef = database.ref('users/' + user.uid);
+                    const snapshot = await userRef.once('value');
+                    
+                    if (!snapshot.exists()) {
+                        // New user
+                        await userRef.set({
+                            username: user.displayName || user.email.split('@')[0],
+                            email: user.email,
+                            photoURL: user.photoURL || null,
+                            createdAt: new Date().toISOString(),
+                            lastLogin: new Date().toISOString(),
+                            isAdmin: false,
+                            points: 0,
+                            roomsJoined: 0
+                        });
+                    } else {
+                        // Existing user - update last login
+                        await userRef.update({
+                            lastLogin: new Date().toISOString()
+                        });
+                    }
+
+                    setTimeout(() => {
+                        window.location.href = 'Index.html';
+                    }, 1500);
+                } catch (error) {
+                    console.error('Google login error:', error);
+                    
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showToast('ยกเลิกการเข้าสู่ระบบ', 'info');
+                    } else if (error.code === 'auth/popup-blocked') {
+                        showError('เบราว์เซอร์บล็อก popup กรุณาอนุญาต popup สำหรับเว็บไซต์นี้');
+                        showToast('กรุณาอนุญาต popup ในเบราว์เซอร์', 'error');
+                    } else if (error.code === 'auth/cancelled-popup-request') {
+                        // User cancelled - do nothing
+                    } else {
+                        showError('ไม่สามารถเข้าสู่ระบบด้วย Google ได้: ' + error.message);
+                        showToast('เกิดข้อผิดพลาดในการเข้าสู่ระบบ', 'error');
+                    }
+                }
+            });
+        }
+
+        // Register Link
+        const registerLink = document.getElementById('registerLink');
+        if (registerLink) {
+            registerLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showToast('กำลังไปยังหน้าสมัครสมาชิก...', 'info');
+                setTimeout(() => {
+                    window.location.href = 'RegisterPage.html';
+                }, 500);
+            });
+        }
+
+        // Check if already logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('User already logged in:', user.email);
+                showToast('คุณเข้าสู่ระบบอยู่แล้ว กำลังพาไปหน้าหลัก...', 'info');
+                setTimeout(() => {
+                    window.location.href = 'Index.html';
+                }, 1000);
+            } else {
+                console.log('No user logged in');
+            }
+        });
+
+        // Log when page is ready
+        window.addEventListener('load', () => {
+            console.log('Page fully loaded');
+            showToast('ระบบพร้อมใช้งาน 👋', 'info');
+        });
+    </script>
+</body>
+</html>

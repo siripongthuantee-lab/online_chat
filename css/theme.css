@@ -1,0 +1,231 @@
+/* Theme Styles for Online Talk - Global Theme System */
+
+/* Base transition for smooth theme changes */
+* {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ===========================
+   CREAM THEME (Default)
+   =========================== */
+body {
+    background-color: #f5f1e8;
+}
+
+/* ===========================
+   WHITE THEME
+   =========================== */
+body.theme-white {
+    background-color: #ffffff;
+}
+
+/* ===========================
+   DARK THEME - Enhanced with Gradients
+   =========================== */
+body.theme-dark {
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* Dark theme text colors */
+body.theme-dark * {
+    color: #f9fafb;
+}
+
+/* Dark theme headers */
+body.theme-dark header {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    border-color: #475569 !important;
+}
+
+/* Dark theme cards */
+body.theme-dark .card-white,
+body.theme-dark .bg-white {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+    border-color: #475569 !important;
+}
+
+/* Dark theme secondary cards */
+body.theme-dark .secondary-card,
+body.theme-dark .bg-gray-50 {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+    border-color: #64748b !important;
+}
+
+/* Dark theme text colors */
+body.theme-dark .text-gray-600,
+body.theme-dark .text-gray-500,
+body.theme-dark .text-gray-700 {
+    color: #cbd5e1 !important;
+}
+
+body.theme-dark .text-gray-800 {
+    color: #e2e8f0 !important;
+}
+
+/* Dark theme borders */
+body.theme-dark .border-black {
+    border-color: #64748b !important;
+}
+
+body.theme-dark .border-gray-200,
+body.theme-dark .border-gray-300 {
+    border-color: #475569 !important;
+}
+
+/* Dark theme shadows */
+body.theme-dark .neobrutalism-shadow,
+body.theme-dark .shadow-\[8px_8px_0px_0px_rgba\(0\,0\,0\,1\)\] {
+    box-shadow: 8px 8px 0px 0px rgba(100, 116, 139, 0.5) !important;
+}
+
+body.theme-dark .shadow-\[4px_4px_0px_0px_rgba\(0\,0\,0\,1\)\],
+body.theme-dark .shadow-\[3px_3px_0px_0px_rgba\(0\,0\,0\,1\)\] {
+    box-shadow: 4px 4px 0px 0px rgba(100, 116, 139, 0.5) !important;
+}
+
+/* Dark theme inputs */
+body.theme-dark input:not([type="checkbox"]):not([type="file"]):not([type="radio"]),
+body.theme-dark textarea,
+body.theme-dark select {
+    background-color: #0f172a !important;
+    color: #f9fafb !important;
+    border-color: #475569 !important;
+}
+
+body.theme-dark input::placeholder,
+body.theme-dark textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Dark theme info boxes */
+body.theme-dark .bg-blue-50 {
+    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
+}
+
+body.theme-dark .text-blue-800 {
+    color: #93c5fd !important;
+}
+
+body.theme-dark .border-blue-300,
+body.theme-dark .border-blue-400 {
+    border-color: #3b82f6 !important;
+}
+
+body.theme-dark .bg-yellow-50 {
+    background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important;
+}
+
+body.theme-dark .text-yellow-800 {
+    color: #fcd34d !important;
+}
+
+body.theme-dark .border-yellow-300 {
+    border-color: #f59e0b !important;
+}
+
+/* Dark theme buttons with original colors preserved */
+body.theme-dark .bg-green-400,
+body.theme-dark .bg-red-400,
+body.theme-dark .bg-orange-400,
+body.theme-dark .bg-blue-400,
+body.theme-dark .bg-purple-400,
+body.theme-dark .bg-pink-400 {
+    color: #000 !important;
+}
+
+/* Dark theme gradient backgrounds */
+body.theme-dark .bg-gradient-to-r,
+body.theme-dark .bg-gradient-to-br {
+    background: linear-gradient(135deg, #312e81 0%, #1e40af 100%) !important;
+}
+
+/* Dark theme hover effects */
+body.theme-dark .hover\:bg-gray-50:hover,
+body.theme-dark .hover\:bg-gray-100:hover {
+    background-color: #475569 !important;
+}
+
+body.theme-dark .hover\:bg-white:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+}
+
+/* Dark theme room cards special styling */
+body.theme-dark .room-card {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
+}
+
+body.theme-dark .room-card:hover {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+}
+
+/* Dark theme tabs */
+body.theme-dark .tab-btn {
+    color: #f9fafb;
+    background: rgba(51, 65, 85, 0.5);
+}
+
+body.theme-dark .tab-btn:hover:not(.active) {
+    background: rgba(71, 85, 105, 0.8);
+}
+
+body.theme-dark .tab-btn.active {
+    background: linear-gradient(135deg, #fbbf24 0%, #FFD93D 100%) !important;
+    color: #000 !important;
+}
+
+/* Dark theme scrollbar */
+body.theme-dark ::-webkit-scrollbar {
+    width: 12px;
+    background: #1e293b;
+}
+
+body.theme-dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 6px;
+}
+
+body.theme-dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+/* Dark theme modals and overlays */
+body.theme-dark .bg-black\/50,
+body.theme-dark .bg-black\/70 {
+    background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* Dark theme links */
+body.theme-dark a:not(.btn):not([class*="bg-"]) {
+    color: #60a5fa !important;
+}
+
+body.theme-dark a:not(.btn):not([class*="bg-"]):hover {
+    color: #93c5fd !important;
+}
+
+/* Preserve yellow accent color in dark theme */
+body.theme-dark .bg-\[\#FFD93D\] {
+    background-color: #FFD93D !important;
+    color: #000 !important;
+}
+
+/* Dark theme chat messages */
+body.theme-dark .message-bubble {
+    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
+}
+
+body.theme-dark .message-bubble.sent {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+}
+
+/* Animation for theme transitions */
+@keyframes themeTransition {
+    0% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+
+body {
+    animation: themeTransition 0.3s ease;
+}
