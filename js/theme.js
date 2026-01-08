@@ -1,56 +1,150 @@
 // Theme Management System for Online Talk
-// This file should be included in all pages to maintain consistent theming
+// ระบบจัดการธีมสำหรับทั้งเว็บไซต์
 
-// Theme configuration
-const THEME_STORAGE_KEY = 'siteTheme';
-const DEFAULT_THEME = 'cream';
-
-// Load and apply saved theme immediately on page load
 (function() {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
-    applyThemeImmediate(savedTheme);
+    'use strict';
+    
+    console.log('🎨 Theme Manager loaded');
+
+    // ฟังก์ชันโหลดธีมที่บันทึกไว้
+    function loadSavedTheme() {
+        const savedTheme = localStorage.getItem('siteTheme') || 'cream';
+        console.log('📂 Loading saved theme:', savedTheme);
+        applyTheme(savedTheme);
+        return savedTheme;
+    }
+
+    // ฟังก์ชันใช้ธีม
+    function applyTheme(theme) {
+        console.log('✨ Applying theme:', theme);
+        
+        // ลบ class ธีมทั้งหมด
+        document.body.classList.remove('theme-white', 'theme-dark');
+        
+        // เพิ่ม class ธีมที่เลือก
+        if (theme === 'white') {
+            document.body.classList.add('theme-white');
+        } else if (theme === 'dark') {
+            document.body.classList.add('theme-dark');
+        }
+        // cream ไม่ต้องเพิ่ม class (เป็น default)
+        
+        // อัพเดท UI ถ้ามีปุ่มเลือกธีม
+        updateThemeButtons(theme);
+        
+        console.log('✅ Theme applied:', theme);
+    }
+
+    // ฟังก์ชันอัพเดทปุ่มธีม
+    function updateThemeButtons(theme) {
+        // ลบ class selected จากปุ่มทั้งหมด
+        document.querySelectorAll('.theme-selector').forEach(btn => {
+            btn.classList.remove('selected');
+        });
+        
+        // เพิ่ม class selected ให้ปุ่มที่เลือก
+        const themeMap = {
+            'cream': 'themeCream',
+            'white': 'themeWhite',
+            'dark': 'themeDark'
+        };
+        
+        const selectedBtn = document.getElementById(themeMap[theme]);
+        if (selectedBtn) {
+            selectedBtn.classList.add('selected');
+        }
+    }
+
+    // ฟังก์ชันบันทึกธีม
+    function saveTheme(theme) {
+        console.log('💾 Saving theme:', theme);
+        localStorage.setItem('siteTheme', theme);
+        applyTheme(theme);
+        
+        // ถ้ามี Firebase user ให้บันทึกลง Firebase ด้วย
+        if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+            const user = firebase.auth().currentUser;
+            const database = firebase.database();
+            
+            database.ref('users/' + user.uid).update({ 
+                theme: theme 
+            }).then(() => {
+                console.log('✅ Theme saved to Firebase');
+            }).catch(error => {
+                console.error('❌ Error saving theme to Firebase:', error);
+            });
+        }
+    }
+
+    // ฟังก์ชันโหลดธีมจาก Firebase
+    async function loadThemeFromFirebase() {
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            try {
+                const user = firebase.auth().currentUser;
+                if (user) {
+                    const database = firebase.database();
+                    const snapshot = await database.ref('users/' + user.uid + '/theme').once('value');
+                    const firebaseTheme = snapshot.val();
+                    
+                    if (firebaseTheme) {
+                        console.log('☁️ Loading theme from Firebase:', firebaseTheme);
+                        localStorage.setItem('siteTheme', firebaseTheme);
+                        applyTheme(firebaseTheme);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error loading theme from Firebase:', error);
+            }
+        }
+    }
+
+    // ตั้งค่า Event Listeners สำหรับปุ่มธีม (ถ้ามี)
+    function setupThemeButtons() {
+        const creamBtn = document.getElementById('themeCream');
+        const whiteBtn = document.getElementById('themeWhite');
+        const darkBtn = document.getElementById('themeDark');
+
+        if (creamBtn) {
+            creamBtn.addEventListener('click', () => saveTheme('cream'));
+        }
+        if (whiteBtn) {
+            whiteBtn.addEventListener('click', () => saveTheme('white'));
+        }
+        if (darkBtn) {
+            darkBtn.addEventListener('click', () => saveTheme('dark'));
+        }
+
+        console.log('🔘 Theme buttons initialized');
+    }
+
+    // Export functions ให้ใช้งานได้จากไฟล์อื่น
+    window.saveTheme = saveTheme;
+    window.applyTheme = applyTheme;
+    window.loadSavedTheme = loadSavedTheme;
+
+    // โหลดธีมทันทีเมื่อโหลดหน้า
+    loadSavedTheme();
+
+    // รอให้ DOM โหลดเสร็จแล้วค่อยตั้งค่าปุ่ม
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setupThemeButtons();
+            loadThemeFromFirebase();
+        });
+    } else {
+        setupThemeButtons();
+        loadThemeFromFirebase();
+    }
+
+    // ฟังการเปลี่ยนแปลง auth state เพื่อโหลดธีมจาก Firebase
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+                console.log('👤 User logged in, loading theme from Firebase');
+                loadThemeFromFirebase();
+            }
+        });
+    }
+
+    console.log('✅ Theme Manager initialized');
 })();
-
-// Apply theme without animation (for initial load)
-function applyThemeImmediate(theme) {
-    document.body.className = '';
-    
-    if (theme === 'white') {
-        document.body.classList.add('theme-white');
-    } else if (theme === 'dark') {
-        document.body.classList.add('theme-dark');
-    }
-    // cream is default (no class needed)
-}
-
-// Apply theme with transition
-function applyTheme(theme) {
-    document.body.className = '';
-    
-    if (theme === 'white') {
-        document.body.classList.add('theme-white');
-    } else if (theme === 'dark') {
-        document.body.classList.add('theme-dark');
-    }
-    // cream is default (no class needed)
-}
-
-// Save theme to localStorage
-function saveTheme(theme) {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
-    applyTheme(theme);
-}
-
-// Get current theme
-function getCurrentTheme() {
-    return localStorage.getItem(THEME_STORAGE_KEY) || DEFAULT_THEME;
-}
-
-// Export functions for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        applyTheme,
-        saveTheme,
-        getCurrentTheme
-    };
-}
