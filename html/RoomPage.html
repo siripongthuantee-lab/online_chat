@@ -8,6 +8,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- เพิ่มระบบธีม -->
+    <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow {
             box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
@@ -37,7 +39,7 @@
                 </button>
             </div>
             <div class="flex items-center gap-2">
-                <span class="bg-green-400 border-2 border-black rounded-full px-4 py-1">
+                <span class="bg-green-400 border-2 border-black rounded-full px-4 py-1 text-black">
                     <span id="userCount">1</span> คนออนไลน์
                 </span>
             </div>
@@ -102,13 +104,13 @@
                 <div class="bg-white border-4 border-black rounded-2xl neobrutalism-shadow flex flex-col h-[600px]">
                     <!-- Chat Header -->
                     <div class="border-b-4 border-black p-4 bg-[#FFD93D]">
-                        <h3 class="text-xl font-bold">💬 แชท</h3>
+                        <h3 class="text-xl font-bold text-black">💬 แชท</h3>
                     </div>
 
                     <!-- Messages -->
                     <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
                         <div class="bg-gray-100 border-2 border-black rounded-lg p-3 text-center">
-                            <p class="text-sm">ยินดีต้อนรับสู่ห้องแชท!</p>
+                            <p class="text-sm text-black">ยินดีต้อนรับสู่ห้องแชท!</p>
                         </div>
                     </div>
 
@@ -130,6 +132,7 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
+    <script src="theme.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
@@ -156,8 +159,8 @@
         let currentUser = null;
         let localStream = null;
         let peerConnection = null;
-        let isMicOn = false;  // เริ่มต้นปิด
-        let isVideoOn = false;  // เริ่มต้นปิด
+        let isMicOn = false;
+        let isVideoOn = false;
 
         // ICE servers configuration
         const iceServers = {
@@ -188,7 +191,7 @@
             }, 3000);
         }
 
-        // Initialize local media (แต่ปิดไว้)
+        // Initialize local media
         async function initLocalMedia() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({
@@ -199,7 +202,6 @@
                 const localVideo = document.getElementById('localVideo');
                 localVideo.srcObject = localStream;
                 
-                // ปิดทั้งกล้องและไมค์ทันที
                 localStream.getVideoTracks().forEach(track => track.enabled = false);
                 localStream.getAudioTracks().forEach(track => track.enabled = false);
                 
@@ -216,14 +218,12 @@
         function createPeerConnection(userId) {
             peerConnection = new RTCPeerConnection(iceServers);
 
-            // Add local stream tracks
             if (localStream) {
                 localStream.getTracks().forEach(track => {
                     peerConnection.addTrack(track, localStream);
                 });
             }
 
-            // Handle incoming tracks
             peerConnection.ontrack = (event) => {
                 const remoteVideo = document.getElementById('remoteVideo');
                 if (event.streams && event.streams[0]) {
@@ -235,7 +235,6 @@
                 }
             };
 
-            // Handle ICE candidates
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     database.ref(`rooms/${roomCode}/candidates/${currentUser.uid}`).push({
@@ -245,7 +244,6 @@
                 }
             };
 
-            // Monitor connection state
             peerConnection.onconnectionstatechange = () => {
                 console.log('Connection state:', peerConnection.connectionState);
                 if (peerConnection.connectionState === 'disconnected') {
@@ -256,7 +254,6 @@
             return peerConnection;
         }
 
-        // Create and send offer
         async function createOffer(targetUserId) {
             if (!peerConnection) {
                 createPeerConnection(targetUserId);
@@ -282,7 +279,6 @@
             }
         }
 
-        // Handle incoming offer
         async function handleOffer(offerData, offererId) {
             if (!peerConnection) {
                 createPeerConnection(offererId);
@@ -309,7 +305,6 @@
             }
         }
 
-        // Handle incoming answer
         async function handleAnswer(answerData) {
             if (peerConnection) {
                 try {
@@ -321,7 +316,6 @@
             }
         }
 
-        // Handle incoming ICE candidates
         function handleCandidate(candidateData) {
             if (peerConnection && candidateData.candidate) {
                 const candidate = new RTCIceCandidate(candidateData.candidate);
@@ -331,9 +325,7 @@
             }
         }
 
-        // Listen for signaling data
         function setupSignalingListeners() {
-            // Listen for offers
             database.ref(`rooms/${roomCode}/offers`).on('child_added', (snapshot) => {
                 const offererId = snapshot.key;
                 if (offererId !== currentUser.uid) {
@@ -344,7 +336,6 @@
                 }
             });
 
-            // Listen for answers
             database.ref(`rooms/${roomCode}/answers`).on('child_added', (snapshot) => {
                 const answererId = snapshot.key;
                 if (answererId !== currentUser.uid) {
@@ -355,7 +346,6 @@
                 }
             });
 
-            // Listen for ICE candidates
             database.ref(`rooms/${roomCode}/candidates`).on('child_added', (snapshot) => {
                 const userId = snapshot.key;
                 if (userId !== currentUser.uid) {
@@ -367,7 +357,6 @@
             });
         }
 
-        // Check authentication
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
                 window.location.href = 'LoginPage.html';
@@ -377,18 +366,15 @@
             currentUser = user;
             document.getElementById('myUsername').textContent = user.displayName || user.email.split('@')[0];
 
-            // Initialize media (แต่ปิดไว้)
             const mediaReady = await initLocalMedia();
             if (!mediaReady) {
                 return;
             }
 
-            // Join room
             const roomRef = database.ref('rooms/' + roomCode);
             const snapshot = await roomRef.once('value');
             
             if (snapshot.exists()) {
-                // Add user to members
                 await roomRef.child('members').update({
                     [user.uid]: {
                         username: user.displayName || user.email.split('@')[0],
@@ -396,22 +382,15 @@
                     }
                 });
                 
-                // Setup signaling
                 setupSignalingListeners();
-                
-                // Listen for messages
                 listenToMessages();
-                
-                // Listen for members
                 listenToMembers();
 
-                // Check if there are other users to connect with
                 const membersSnapshot = await roomRef.child('members').once('value');
                 const members = membersSnapshot.val() || {};
                 const otherUsers = Object.keys(members).filter(uid => uid !== user.uid);
                 
                 if (otherUsers.length > 0) {
-                    // Create offer to first other user
                     setTimeout(() => createOffer(otherUsers[0]), 1000);
                 }
             } else {
@@ -422,7 +401,6 @@
             }
         });
 
-        // Listen to messages
         function listenToMessages() {
             const messagesRef = database.ref('rooms/' + roomCode + '/messages');
             messagesRef.on('child_added', (snapshot) => {
@@ -431,7 +409,6 @@
             });
         }
 
-        // Listen to members
         function listenToMembers() {
             const membersRef = database.ref('rooms/' + roomCode + '/members');
             membersRef.on('value', (snapshot) => {
@@ -439,7 +416,6 @@
                 const count = Object.keys(members).length;
                 document.getElementById('userCount').textContent = count;
 
-                // Update remote username if available
                 const otherUsers = Object.keys(members).filter(uid => uid !== currentUser.uid);
                 if (otherUsers.length > 0) {
                     const otherUser = members[otherUsers[0]];
@@ -448,7 +424,6 @@
             });
         }
 
-        // Display message
         function displayMessage(message) {
             const container = document.getElementById('messagesContainer');
             const messageEl = document.createElement('div');
@@ -459,15 +434,15 @@
             messageEl.innerHTML = `
                 <div class="flex items-center gap-2 ${isMyMessage ? 'justify-end' : ''}">
                     ${!isMyMessage ? `
-                        <div class="w-8 h-8 bg-[#6BCB77] rounded-full border-2 border-black flex items-center justify-center text-xs">
+                        <div class="w-8 h-8 bg-[#6BCB77] rounded-full border-2 border-black flex items-center justify-center text-xs text-black">
                             ${message.username.charAt(0)}
                         </div>
                     ` : ''}
-                    <span class="text-sm font-bold">${message.username}</span>
+                    <span class="text-sm font-bold text-black">${message.username}</span>
                 </div>
                 <div class="${isMyMessage ? 'flex justify-end' : ''}">
                     <div class="${isMyMessage ? 'bg-[#FFD93D]' : 'bg-gray-200'} border-2 border-black rounded-lg px-3 py-2 inline-block max-w-xs break-words">
-                        ${message.text}
+                        <span class="text-black">${message.text}</span>
                     </div>
                 </div>
                 <div class="${isMyMessage ? 'text-right' : ''} text-xs text-gray-500 px-2">
@@ -479,7 +454,6 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Send message
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
@@ -510,7 +484,6 @@
             }
         });
 
-        // Toggle Mic
         document.getElementById('micBtn').addEventListener('click', function() {
             if (localStream) {
                 const audioTrack = localStream.getAudioTracks()[0];
@@ -526,7 +499,6 @@
             }
         });
 
-        // Toggle Video
         document.getElementById('videoBtn').addEventListener('click', function() {
             if (localStream) {
                 const videoTrack = localStream.getVideoTracks()[0];
@@ -538,7 +510,6 @@
                         ? 'w-16 h-16 bg-white border-4 border-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                         : 'w-16 h-16 bg-red-500 text-white border-4 border-black rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]';
                     
-                    // Toggle video visibility
                     const localVideo = document.getElementById('localVideo');
                     const localVideoOff = document.getElementById('localVideoOff');
                     
@@ -555,26 +526,21 @@
             }
         });
 
-        // Copy Room Code
         document.getElementById('copyCodeBtn').addEventListener('click', () => {
             navigator.clipboard.writeText(roomCode);
             showToast('คัดลอกโค้ดแล้ว!', 'success');
         });
 
-        // Leave Room
         async function leaveRoom() {
             if (confirm('ต้องการออกจากห้องหรือไม่?')) {
-                // Stop all tracks
                 if (localStream) {
                     localStream.getTracks().forEach(track => track.stop());
                 }
 
-                // Close peer connection
                 if (peerConnection) {
                     peerConnection.close();
                 }
 
-                // Remove from Firebase
                 if (currentUser) {
                     await database.ref('rooms/' + roomCode + '/members/' + currentUser.uid).remove();
                 }
@@ -586,7 +552,6 @@
         document.getElementById('leaveRoomBtn').addEventListener('click', leaveRoom);
         document.getElementById('endCallBtn').addEventListener('click', leaveRoom);
 
-        // Handle page unload
         window.addEventListener('beforeunload', async () => {
             if (localStream) {
                 localStream.getTracks().forEach(track => track.stop());

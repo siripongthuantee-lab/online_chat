@@ -8,6 +8,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- เพิ่มระบบธีม -->
+    <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow {
             box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
@@ -62,10 +64,10 @@
                     <p id="profileEmail" class="text-gray-600 mb-4">email@example.com</p>
                     
                     <div class="flex items-center gap-2 justify-center md:justify-start flex-wrap">
-                        <span class="inline-block bg-green-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <span class="inline-block bg-green-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
                             🟢 ออนไลน์
                         </span>
-                        <span id="adminBadge" class="hidden inline-block bg-red-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                        <span id="adminBadge" class="hidden inline-block bg-red-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">
                             🛡️ Admin
                         </span>
                     </div>
@@ -108,7 +110,7 @@
                     ⚙️ การตั้งค่า
                 </button>
                 <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold" data-tab="account">
-                    📝 บัญชี
+                    🔐 บัญชี
                 </button>
                 <button class="tab-btn px-6 py-4 font-bold" data-tab="about">
                     ℹ️ เกี่ยวกับ
@@ -176,7 +178,7 @@
 
                 <!-- Account Tab -->
                 <div id="accountTab" class="tab-content hidden">
-                    <h3 class="text-xl font-bold mb-4">📝 จัดการบัญชี</h3>
+                    <h3 class="text-xl font-bold mb-4">🔐 จัดการบัญชี</h3>
                     
                     <div class="space-y-4">
                         <button onclick="changePassword()" class="w-full bg-white border-2 border-black rounded-lg px-6 py-3 text-left hover:bg-gray-50 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
@@ -237,6 +239,7 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
+    <script src="theme.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
@@ -310,6 +313,11 @@
             if (user.photoURL) {
                 avatarContainer.innerHTML = `<img src="${user.photoURL}" alt="Avatar" class="w-full h-full object-cover" />`;
             }
+            
+            // โหลดธีมของผู้ใช้
+            if (userData.theme) {
+                applyTheme(userData.theme);
+            }
         });
 
         // Tab Switching
@@ -357,12 +365,18 @@
             }
         });
 
-        // Theme
-        function setTheme(theme) {
-            document.body.className = theme === 'cream' ? 'bg-[#f5f1e8] min-h-screen' : 
-                                     theme === 'white' ? 'bg-white min-h-screen' : 
-                                     'bg-gray-800 text-white min-h-screen';
-            showToast(`เปลี่ยนธีมเป็น ${theme} แล้ว`, 'success');
+        // Theme - แก้ไขให้บันทึกลง Firebase
+        async function setTheme(theme) {
+            saveTheme(theme); // ใช้ฟังก์ชันจาก theme.js
+            
+            if (currentUser) {
+                try {
+                    await database.ref('users/' + currentUser.uid).update({ theme: theme });
+                    showToast(`เปลี่ยนธีมเป็น ${theme} แล้ว - ใช้กับทุกหน้า!`, 'success');
+                } catch (error) {
+                    console.error('Error saving theme:', error);
+                }
+            }
         }
 
         // Account Actions

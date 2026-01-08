@@ -8,6 +8,8 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- เพิ่ม theme.css -->
+    <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow {
             box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
@@ -181,6 +183,8 @@
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
+    <!-- เพิ่ม theme.js ก่อน script หลัก -->
+    <script src="theme.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
@@ -234,13 +238,18 @@
 
             document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
 
-            // Check if user is admin
+            // โหลดธีมของผู้ใช้จาก Firebase
             const userRef = database.ref('users/' + user.uid);
             const snapshot = await userRef.once('value');
             const userData = snapshot.val();
             
             if (userData && userData.isAdmin) {
                 document.getElementById('adminBtn').classList.remove('hidden');
+            }
+
+            // ใช้ธีมที่บันทึกไว้
+            if (userData && userData.theme) {
+                applyTheme(userData.theme);
             }
         });
 
@@ -369,4 +378,4 @@
         });
     </script>
 </body>
-</html> 
+</html>
