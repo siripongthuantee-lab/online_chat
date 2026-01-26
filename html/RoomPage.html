@@ -8,8 +8,10 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- เพิ่มระบบธีม -->
+    
+    <!-- ✨✨✨ เพิ่มระบบธีม ✨✨✨ -->
     <link rel="stylesheet" href="theme.css">
+    
     <style>
         .neobrutalism-shadow {
             box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
@@ -23,7 +25,7 @@
         }
     </style>
 </head>
-<body class="bg-[#f5f1e8]">
+<body>
     <!-- Room Header -->
     <div class="bg-white border-b-4 border-black p-4">
         <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-4">
@@ -366,15 +368,25 @@
             currentUser = user;
             document.getElementById('myUsername').textContent = user.displayName || user.email.split('@')[0];
 
+            // โหลดธีมของผู้ใช้จาก Firebase
+            const userRef = database.ref('users/' + user.uid);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            
+            // ใช้ธีมที่บันทึกไว้
+            if (userData && userData.theme) {
+                applyTheme(userData.theme);
+            }
+
             const mediaReady = await initLocalMedia();
             if (!mediaReady) {
                 return;
             }
 
             const roomRef = database.ref('rooms/' + roomCode);
-            const snapshot = await roomRef.once('value');
+            const roomSnapshot = await roomRef.once('value');
             
-            if (snapshot.exists()) {
+            if (roomSnapshot.exists()) {
                 await roomRef.child('members').update({
                     [user.uid]: {
                         username: user.displayName || user.email.split('@')[0],
@@ -396,7 +408,7 @@
             } else {
                 showToast('ไม่พบห้องนี้', 'error');
                 setTimeout(() => {
-                    window.location.href = 'Index.html';
+                    window.location.href = 'index.html';
                 }, 2000);
             }
         });
@@ -545,7 +557,7 @@
                     await database.ref('rooms/' + roomCode + '/members/' + currentUser.uid).remove();
                 }
 
-                window.location.href = 'Index.html';
+                window.location.href = 'index.html';
             }
         }
 

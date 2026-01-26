@@ -8,8 +8,9 @@
 /* ===========================
    CREAM THEME (Default)
    =========================== */
-body {
-    background-color: #f5f1e8;
+body,
+body.theme-cream {
+    background-color: #f5f1e8 !important;
 }
 
 /* ===========================
@@ -128,32 +129,6 @@ body.theme-dark .border-blue-400 {
     border-color: #3b82f6 !important;
 }
 
-body.theme-dark .bg-yellow-50 {
-    background: linear-gradient(135deg, #78350f 0%, #92400e 100%) !important;
-}
-
-body.theme-dark .text-yellow-800 {
-    color: #fcd34d !important;
-}
-
-body.theme-dark .border-yellow-300 {
-    border-color: #f59e0b !important;
-}
-
-body.theme-dark .bg-red-100 {
-    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%) !important;
-}
-
-body.theme-dark .text-red-700,
-body.theme-dark .text-red-600 {
-    color: #fca5a5 !important;
-}
-
-body.theme-dark .border-red-500,
-body.theme-dark .border-red-600 {
-    border-color: #dc2626 !important;
-}
-
 /* Dark theme - Colored buttons (keep original colors) */
 body.theme-dark .bg-green-400,
 body.theme-dark .bg-red-400,
@@ -191,11 +166,6 @@ body.theme-dark .hover\:bg-gray-800:hover {
     background-color: #334155 !important;
 }
 
-body.theme-dark .hover\:bg-\[\#ffd000\]:hover {
-    background-color: #ffd000 !important;
-    color: #000 !important;
-}
-
 /* Dark theme - Tabs */
 body.theme-dark .tab-btn {
     color: #f9fafb !important;
@@ -211,22 +181,7 @@ body.theme-dark .tab-btn.active {
     color: #000 !important;
 }
 
-/* Dark theme - Scrollbar */
-body.theme-dark ::-webkit-scrollbar {
-    width: 12px;
-    background: #1e293b;
-}
-
-body.theme-dark ::-webkit-scrollbar-thumb {
-    background: #475569;
-    border-radius: 6px;
-}
-
-body.theme-dark ::-webkit-scrollbar-thumb:hover {
-    background: #64748b;
-}
-
-/* Dark theme - Modals and overlays */
+/* Dark theme - Modals */
 body.theme-dark .modal {
     background: rgba(15, 23, 42, 0.8) !important;
 }
@@ -234,96 +189,6 @@ body.theme-dark .modal {
 body.theme-dark .modal-content {
     background: linear-gradient(135deg, #1e293b 0%, #334155 100%) !important;
     border-color: #475569 !important;
-}
-
-body.theme-dark .bg-black\/50,
-body.theme-dark .bg-black\/70,
-body.theme-dark .bg-black\/80 {
-    background-color: rgba(15, 23, 42, 0.8) !important;
-}
-
-/* Dark theme - Links */
-body.theme-dark a:not(.btn):not([class*="bg-"]) {
-    color: #60a5fa !important;
-}
-
-body.theme-dark a:not(.btn):not([class*="bg-"]):hover {
-    color: #93c5fd !important;
-}
-
-/* Dark theme - SVG icons */
-body.theme-dark svg circle[fill="white"] {
-    fill: #f9fafb !important;
-}
-
-body.theme-dark svg circle[fill="black"],
-body.theme-dark svg path[fill="black"] {
-    fill: #1e293b !important;
-}
-
-body.theme-dark svg path[stroke="black"] {
-    stroke: #f9fafb !important;
-}
-
-/* Dark theme - Toast notifications */
-body.theme-dark .bg-green-100 {
-    background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
-}
-
-body.theme-dark .text-green-700 {
-    color: #86efac !important;
-}
-
-body.theme-dark .border-green-500 {
-    border-color: #10b981 !important;
-}
-
-body.theme-dark .bg-red-100 {
-    background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%) !important;
-}
-
-body.theme-dark .text-red-700 {
-    color: #fca5a5 !important;
-}
-
-body.theme-dark .border-red-500 {
-    border-color: #dc2626 !important;
-}
-
-body.theme-dark .bg-blue-100 {
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%) !important;
-}
-
-body.theme-dark .text-blue-700 {
-    color: #93c5fd !important;
-}
-
-body.theme-dark .border-blue-500 {
-    border-color: #3b82f6 !important;
-}
-
-/* Dark theme - Video placeholders */
-body.theme-dark .bg-gray-800 {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
-}
-
-/* Dark theme - Message bubbles */
-body.theme-dark .message-bubble {
-    background: linear-gradient(135deg, #334155 0%, #475569 100%) !important;
-}
-
-body.theme-dark .message-bubble.sent {
-    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
-}
-
-/* Dark theme - Cards and containers */
-body.theme-dark .bg-gradient-to-r,
-body.theme-dark .bg-gradient-to-br {
-    background: linear-gradient(135deg, #312e81 0%, #1e40af 100%) !important;
-}
-
-body.theme-dark .from-purple-50 {
-    background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 100%) !important;
 }
 
 /* Animation for theme transitions */
@@ -336,43 +201,8 @@ body {
     animation: themeTransition 0.3s ease;
 }
 
-/* Ensure theme persists on all elements */
-body.theme-dark .bg-\[#f5f1e8\] {
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%) !important;
-}
-
-/* Dark theme - Special backgrounds */
-body.theme-dark .bg-\[\#FFD93D\] {
-    background-color: #FFD93D !important;
-    color: #000 !important;
-}
-
-body.theme-dark .bg-\[\#FF6B9D\] {
-    background-color: #FF6B9D !important;
-    color: #fff !important;
-}
-
-body.theme-dark .bg-\[\#6BCB77\] {
-    background-color: #6BCB77 !important;
-    color: #fff !important;
-}
-
-/* Dark theme - Fix text visibility */
-body.theme-dark .text-white {
-    color: #ffffff !important;
-}
-
-body.theme-dark button,
-body.theme-dark .font-bold {
-    color: #f9fafb !important;
-}
-
-body.theme-dark .bg-green-400 *,
-body.theme-dark .bg-red-400 *,
-body.theme-dark .bg-orange-400 *,
-body.theme-dark .bg-blue-400 *,
-body.theme-dark .bg-\[\#FFD93D\] *,
-body.theme-dark .bg-\[\#FF6B9D\] *,
-body.theme-dark .bg-\[\#6BCB77\] * {
-    color: inherit !important;
+/* Theme selector styling */
+.theme-selector.selected {
+    box-shadow: 0 0 0 4px #10b981, 0 0 30px rgba(16, 185, 129, 0.5);
+    transform: scale(1.05);
 }

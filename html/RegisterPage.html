@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <!-- เพิ่ม theme.css -->
     <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow {
@@ -315,7 +314,7 @@
                 showToast('สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Online Talk 🎉', 'success');
 
                 setTimeout(() => {
-                    window.location.href = 'Index.html';
+                    window.location.href = 'index.html';
                 }, 1500);
             } catch (error) {
                 console.error('Register error:', error);
@@ -377,7 +376,7 @@
                 }
 
                 setTimeout(() => {
-                    window.location.href = 'Index.html';
+                    window.location.href = 'index.html';
                 }, 1500);
             } catch (error) {
                 console.error('Google register error:', error);
@@ -397,7 +396,7 @@
         // Check if already logged in
         auth.onAuthStateChanged((user) => {
             if (user) {
-                window.location.href = 'Index.html';
+                window.location.href = 'index.html';
             }
         });
     </script>

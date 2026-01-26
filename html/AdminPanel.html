@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel Pro - Online Talk</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <style>
+        body {
+            background-color: #f5f1e8 !important;
+            font-family: 'Prompt', sans-serif;
+        }
+        .neobrutalism-shadow {
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+        }
+        .tab-btn {
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background-color: #FFD93D !important;
+            transform: translateY(-2px);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-card {
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b-4 border-black sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-red-500 border-2 border-black rounded-lg flex items-center justify-center text-2xl">
+                    🛡️
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">Admin Panel Pro</h1>
+                    <p id="headerEmail" class="text-sm text-gray-600">loading...</p>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <a href="index.html" class="px-4 py-2 bg-white border-2 border-black rounded-lg font-bold hover:bg-gray-100">
+                    🏠 หน้าหลัก
+                </a>
+                <button id="logoutBtn" class="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold hover:bg-red-600">
+                    🚪 ออก
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div id="app" class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Loading -->
+        <div id="loading" class="text-center py-20">
+            <div class="w-20 h-20 border-8 border-black border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-xl font-bold">กำลังโหลด...</p>
+        </div>
+
+        <!-- Main Content -->
+        <div id="mainContent" style="display:none;">
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card bg-gradient-to-br from-blue-400 to-blue-500 border-4 border-black rounded-2xl p-6 neobrutalism-shadow">
+                    <div class="text-4xl mb-2">👥</div>
+                    <div class="text-3xl font-bold text-white" id="statUsers">0</div>
+                    <div class="text-sm font-bold text-white">ผู้ใช้ทั้งหมด</div>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-red-400 to-red-500 border-4 border-black rounded-2xl p-6 neobrutalism-shadow">
+                    <div class="text-4xl mb-2">🛡️</div>
+                    <div class="text-3xl font-bold text-white" id="statAdmins">0</div>
+                    <div class="text-sm font-bold text-white">Admin</div>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-green-400 to-green-500 border-4 border-black rounded-2xl p-6 neobrutalism-shadow">
+                    <div class="text-4xl mb-2">🏠</div>
+                    <div class="text-3xl font-bold text-white" id="statRooms">0</div>
+                    <div class="text-sm font-bold text-white">ห้องทั้งหมด</div>
+                </div>
+                <div class="stat-card bg-gradient-to-br from-purple-400 to-purple-500 border-4 border-black rounded-2xl p-6 neobrutalism-shadow">
+                    <div class="text-4xl mb-2">💬</div>
+                    <div class="text-3xl font-bold text-white" id="statMessages">0</div>
+                    <div class="text-sm font-bold text-white">ข้อความ</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="bg-white border-4 border-black rounded-2xl neobrutalism-shadow overflow-hidden">
+                <div class="flex overflow-x-auto border-b-4 border-black bg-gray-50">
+                    <button class="tab-btn active px-6 py-4 border-r-2 border-black font-bold whitespace-nowrap bg-white" data-tab="dashboard">
+                        📊 แดชบอร์ด
+                    </button>
+                    <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold whitespace-nowrap bg-white" data-tab="users">
+                        👥 ผู้ใช้
+                    </button>
+                    <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold whitespace-nowrap bg-white" data-tab="rooms">
+                        🏠 ห้อง
+                    </button>
+                    <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold whitespace-nowrap bg-white" data-tab="admin">
+                        🛡️ จัดการ Admin
+                    </button>
+                    <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold whitespace-nowrap bg-white" data-tab="reports">
+                        📋 รายงาน
+                    </button>
+                    <button class="tab-btn px-6 py-4 border-r-2 border-black font-bold whitespace-nowrap bg-white" data-tab="broadcast">
+                        📢 ประกาศ
+                    </button>
+                    <button class="tab-btn px-6 py-4 font-bold whitespace-nowrap bg-white" data-tab="settings">
+                        ⚙️ ตั้งค่า
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <!-- Dashboard Tab -->
+                    <div id="dashboardTab" class="tab-content active">
+                        <h2 class="text-2xl font-bold mb-6">📊 ภาพรวมระบบ</h2>
+                        
+                        <!-- Activity Chart -->
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-blue-50 border-2 border-blue-400 rounded-xl p-6">
+                                <h3 class="text-xl font-bold mb-4">📈 กิจกรรมล่าสุด</h3>
+                                <div id="recentActivity" class="space-y-2 max-h-64 overflow-y-auto">
+                                    <p class="text-gray-500 text-center py-4">กำลังโหลด...</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 border-2 border-green-400 rounded-xl p-6">
+                                <h3 class="text-xl font-bold mb-4">🔥 ผู้ใช้ที่ใช้งานมากที่สุด</h3>
+                                <div id="topUsers" class="space-y-2 max-h-64 overflow-y-auto">
+                                    <p class="text-gray-500 text-center py-4">กำลังโหลด...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- System Status -->
+                        <div class="bg-white border-2 border-black rounded-xl p-6">
+                            <h3 class="text-xl font-bold mb-4">💻 สถานะระบบ</h3>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="bg-green-100 border-2 border-black rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold">Firebase</span>
+                                        <span class="text-green-600">● เชื่อมต่อ</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">สถานะ: ปกติ</p>
+                                </div>
+                                <div class="bg-blue-100 border-2 border-black rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold">Database</span>
+                                        <span id="dbStatus" class="text-blue-600">● ออนไลน์</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">ใช้งาน: <span id="dbUsage">0</span> KB</p>
+                                </div>
+                                <div class="bg-purple-100 border-2 border-black rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <span class="font-bold">เวอร์ชัน</span>
+                                        <span class="text-purple-600">v2.0</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">อัพเดท: 2024</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users Tab -->
+                    <div id="usersTab" class="tab-content">
+                        <h2 class="text-2xl font-bold mb-4">👥 จัดการผู้ใช้</h2>
+                        
+                        <!-- Search & Filter -->
+                        <div class="flex gap-4 mb-4 flex-wrap">
+                            <input type="text" id="userSearch" placeholder="🔍 ค้นหาผู้ใช้..." class="flex-1 px-4 py-2 border-2 border-black rounded-lg">
+                            <select id="userFilter" class="px-4 py-2 border-2 border-black rounded-lg font-bold">
+                                <option value="all">ทั้งหมด</option>
+                                <option value="admin">Admin เท่านั้น</option>
+                                <option value="user">User ธรรมดา</option>
+                            </select>
+                            <button id="loadUsersBtn" class="px-6 py-2 bg-blue-500 text-white border-2 border-black rounded-lg font-bold hover:bg-blue-600">
+                                โหลดผู้ใช้
+                            </button>
+                        </div>
+
+                        <div id="usersList" class="space-y-3 max-h-[600px] overflow-y-auto">
+                            <p class="text-center text-gray-500 py-8 bg-gray-50 rounded-lg">กดปุ่มโหลดผู้ใช้</p>
+                        </div>
+                    </div>
+
+                    <!-- Rooms Tab -->
+                    <div id="roomsTab" class="tab-content">
+                        <h2 class="text-2xl font-bold mb-4">🏠 จัดการห้องแชท</h2>
+                        
+                        <div class="flex gap-4 mb-4 flex-wrap">
+                            <button id="loadActiveRooms" class="flex-1 px-6 py-3 bg-green-500 text-white border-2 border-black rounded-lg font-bold hover:bg-green-600">
+                                📡 ห้องที่ใช้งานอยู่
+                            </button>
+                            <button id="loadAllRooms" class="flex-1 px-6 py-3 bg-blue-500 text-white border-2 border-black rounded-lg font-bold hover:bg-blue-600">
+                                📋 ห้องทั้งหมด
+                            </button>
+                            <button id="clearEmptyRooms" class="flex-1 px-6 py-3 bg-orange-500 text-white border-2 border-black rounded-lg font-bold hover:bg-orange-600">
+                                🧹 ลบห้องว่าง
+                            </button>
+                        </div>
+
+                        <div id="roomsList" class="space-y-3 max-h-[600px] overflow-y-auto">
+                            <p class="text-center text-gray-500 py-8 bg-gray-50 rounded-lg">เลือกปุ่มด้านบนเพื่อดูห้อง</p>
+                        </div>
+                    </div>
+
+                    <!-- Admin Tab -->
+                    <div id="adminTab" class="tab-content">
+                        <h2 class="text-2xl font-bold mb-6">🛡️ จัดการ Admin</h2>
+                        
+                        <!-- Current Admin Info -->
+                        <div class="bg-blue-50 border-2 border-blue-400 rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold mb-2">ข้อมูลของคุณ</h3>
+                            <p id="currentAdminEmail" class="text-sm mb-1">อีเมล: -</p>
+                            <p id="currentAdminUID" class="text-sm mb-2">UID: -</p>
+                            <span class="inline-block bg-green-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                                ✅ คุณเป็น Admin
+                            </span>
+                        </div>
+
+                        <!-- Make Admin by Email -->
+                        <div class="bg-white border-2 border-black rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold mb-4">📧 ตั้ง Admin ด้วยอีเมล</h3>
+                            <div class="flex gap-4">
+                                <input type="email" id="adminEmail" placeholder="อีเมลผู้ใช้" class="flex-1 px-4 py-3 border-2 border-black rounded-lg">
+                                <button id="makeAdminBtn" class="px-6 py-3 bg-red-500 text-white border-2 border-black rounded-lg font-bold hover:bg-red-600">
+                                    ตั้งเป็น Admin
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Admin List -->
+                        <div class="bg-white border-2 border-black rounded-xl p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-xl font-bold">👑 Admin ทั้งหมด</h3>
+                                <button id="loadAdminsBtn" class="px-4 py-2 bg-purple-500 text-white border-2 border-black rounded-lg font-bold hover:bg-purple-600">
+                                    รีเฟรช
+                                </button>
+                            </div>
+                            <div id="adminsList" class="space-y-2">
+                                <p class="text-center text-gray-500 py-4">กดปุ่มรีเฟรช</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports Tab -->
+                    <div id="reportsTab" class="tab-content">
+                        <h2 class="text-2xl font-bold mb-6">📋 รายงานและสถิติ</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- User Report -->
+                            <div class="bg-white border-2 border-black rounded-xl p-6">
+                                <h3 class="text-xl font-bold mb-4">👥 สถิติผู้ใช้</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between p-3 bg-blue-50 rounded-lg">
+                                        <span>ผู้ใช้ใหม่วันนี้</span>
+                                        <span id="newUsersToday" class="font-bold">0</span>
+                                    </div>
+                                    <div class="flex justify-between p-3 bg-green-50 rounded-lg">
+                                        <span>ผู้ใช้ที่ใช้งานวันนี้</span>
+                                        <span id="activeUsersToday" class="font-bold">0</span>
+                                    </div>
+                                    <div class="flex justify-between p-3 bg-purple-50 rounded-lg">
+                                        <span>เวลาออนไลน์เฉลี่ย</span>
+                                        <span id="avgOnlineTime" class="font-bold">0 นาที</span>
+                                    </div>
+                                </div>
+                                <button id="exportUsersBtn" class="w-full mt-4 px-4 py-2 bg-blue-500 text-white border-2 border-black rounded-lg font-bold hover:bg-blue-600">
+                                    📥 ส่งออกข้อมูลผู้ใช้
+                                </button>
+                            </div>
+
+                            <!-- Room Report -->
+                            <div class="bg-white border-2 border-black rounded-xl p-6">
+                                <h3 class="text-xl font-bold mb-4">🏠 สถิติห้อง</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between p-3 bg-green-50 rounded-lg">
+                                        <span>ห้องที่ใช้งานอยู่</span>
+                                        <span id="roomsActive" class="font-bold">0</span>
+                                    </div>
+                                    <div class="flex justify-between p-3 bg-orange-50 rounded-lg">
+                                        <span>ห้องว่าง</span>
+                                        <span id="roomsEmpty" class="font-bold">0</span>
+                                    </div>
+                                    <div class="flex justify-between p-3 bg-purple-50 rounded-lg">
+                                        <span>ห้องที่มีคนเยอะที่สุด</span>
+                                        <span id="busiestRoom" class="font-bold">-</span>
+                                    </div>
+                                </div>
+                                <button id="exportRoomsBtn" class="w-full mt-4 px-4 py-2 bg-green-500 text-white border-2 border-black rounded-lg font-bold hover:bg-green-600">
+                                    📥 ส่งออกข้อมูลห้อง
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Activity Log -->
+                        <div class="bg-white border-2 border-black rounded-xl p-6 mt-6">
+                            <h3 class="text-xl font-bold mb-4">📝 Log กิจกรรม</h3>
+                            <div id="activityLog" class="space-y-2 max-h-96 overflow-y-auto bg-gray-50 rounded-lg p-4">
+                                <p class="text-gray-500 text-center">ไม่มี log</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Broadcast Tab -->
+                    <div id="broadcastTab" class="tab-content">
+                        <h2 class="text-2xl font-bold mb-6">📢 ส่งประกาศ</h2>
+                        
+                        <div class="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 mb-6">
+                            <p class="text-sm text-yellow-800 font-bold">⚠️ ข้อความที่ส่งจะแสดงให้ผู้ใช้ทุกคนเห็น</p>
+                        </div>
+
+                        <div class="bg-white border-2 border-black rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold mb-4">✍️ เขียนประกาศ</h3>
+                            <input type="text" id="announceTitle" placeholder="หัวข้อประกาศ" class="w-full px-4 py-3 border-2 border-black rounded-lg mb-4">
+                            <textarea id="announceMessage" placeholder="ข้อความประกาศ..." class="w-full px-4 py-3 border-2 border-black rounded-lg mb-4 h-32"></textarea>
+                            
+                            <div class="flex gap-4 mb-4">
+                                <select id="announceType" class="px-4 py-2 border-2 border-black rounded-lg font-bold">
+                                    <option value="info">ℹ️ ข้อมูล</option>
+                                    <option value="warning">⚠️ คำเตือน</option>
+                                    <option value="success">✅ สำเร็จ</option>
+                                    <option value="error">❌ ข้อผิดพลาด</option>
+                                </select>
+                            </div>
+
+                            <button id="sendAnnounce" class="w-full px-6 py-3 bg-blue-500 text-white border-2 border-black rounded-lg font-bold hover:bg-blue-600">
+                                📢 ส่งประกาศ
+                            </button>
+                        </div>
+
+                        <!-- Previous Announcements -->
+                        <div class="bg-white border-2 border-black rounded-xl p-6">
+                            <h3 class="text-xl font-bold mb-4">📋 ประกาศก่อนหน้า</h3>
+                            <div id="announceList" class="space-y-2 max-h-96 overflow-y-auto">
+                                <p class="text-center text-gray-500 py-4">ยังไม่มีประกาศ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Tab -->
+                    <div id="settingsTab" class="tab-content">
+                        <h2 class="text-2xl font-bold mb-6">⚙️ การตั้งค่า</h2>
+                        
+                        <!-- Database Actions -->
+                        <div class="bg-white border-2 border-black rounded-xl p-6 mb-6">
+                            <h3 class="text-xl font-bold mb-4">🗄️ จัดการฐานข้อมูล</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <button id="backupDB" class="px-6 py-3 bg-blue-500 text-white border-2 border-black rounded-lg font-bold hover:bg-blue-600">
+                                    💾 สำรองข้อมูล
+                                </button>
+                                <button id="exportStats" class="px-6 py-3 bg-green-500 text-white border-2 border-black rounded-lg font-bold hover:bg-green-600">
+                                    📊 ส่งออกสถิติ
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Danger Zone -->
+                        <div class="bg-red-50 border-2 border-red-500 rounded-xl p-6">
+                            <h3 class="text-xl font-bold mb-4 text-red-800">⚠️ Danger Zone</h3>
+                            <div class="space-y-3">
+                                <button id="clearAllRooms" class="w-full px-6 py-3 bg-orange-500 text-white border-2 border-black rounded-lg font-bold hover:bg-orange-600">
+                                    🗑️ ลบห้องทั้งหมด
+                                </button>
+                                <button id="clearMessages" class="w-full px-6 py-3 bg-red-500 text-white border-2 border-black rounded-lg font-bold hover:bg-red-600">
+                                    💬 ลบข้อความทั้งหมด
+                                </button>
+                                <button id="resetDB" class="w-full px-6 py-3 bg-red-700 text-white border-2 border-black rounded-lg font-bold hover:bg-red-800">
+                                    💣 รีเซ็ตฐานข้อมูล (อันตราย!)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" style="display:none;" class="fixed bottom-4 right-4 px-6 py-3 bg-blue-500 text-white border-2 border-black rounded-lg font-bold shadow-lg z-50"></div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
+            authDomain: "chat-online-project-187e9.firebaseapp.com",
+            databaseURL: "https://chat-online-project-187e9-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "chat-online-project-187e9",
+            storageBucket: "chat-online-project-187e9.firebasestorage.app",
+            messagingSenderId: "238726912803",
+            appId: "1:238726912803:web:342c5669f6edd8cbb48a96",
+            measurementId: "G-SL9N8KG89G"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+        let currentUser = null;
+
+        // Toast
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const colors = { success: 'bg-green-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-orange-500' };
+            toast.className = `fixed bottom-4 right-4 px-6 py-3 text-white border-2 border-black rounded-lg font-bold shadow-lg z-50 ${colors[type]}`;
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => toast.style.display = 'none', 3000);
+        }
+
+        // Tab Switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(tab + 'Tab').classList.add('active');
+            });
+        });
+
+        // Load Stats
+        async function loadStats() {
+            try {
+                const [usersSnap, roomsSnap] = await Promise.all([
+                    database.ref('users').once('value'),
+                    database.ref('rooms').once('value')
+                ]);
+                
+                const users = usersSnap.val() || {};
+                const rooms = roomsSnap.val() || {};
+                
+                const totalUsers = Object.keys(users).length;
+                const totalAdmins = Object.values(users).filter(u => u.isAdmin).length;
+                const totalRooms = Object.keys(rooms).length;
+                
+                // Count messages
+                let totalMessages = 0;
+                Object.values(rooms).forEach(room => {
+                    if (room.messages) {
+                        totalMessages += Object.keys(room.messages).length;
+                    }
+                });
+                
+                document.getElementById('statUsers').textContent = totalUsers;
+                document.getElementById('statAdmins').textContent = totalAdmins;
+                document.getElementById('statRooms').textContent = totalRooms;
+                document.getElementById('statMessages').textContent = totalMessages;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load Recent Activity
+        async function loadRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            container.innerHTML = '<p class="text-gray-500 text-center py-2">กำลังโหลด...</p>';
+            
+            try {
+                const snapshot = await database.ref('users').limitToLast(10).once('value');
+                const users = snapshot.val() || {};
+                
+                container.innerHTML = '';
+                Object.entries(users).reverse().forEach(([uid, user]) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200';
+                    div.innerHTML = `
+                        <div class="w-8 h-8 bg-blue-400 rounded-full flex items-center justify-center text-white font-bold">
+                            ${(user.username || user.email || '?')[0].toUpperCase()}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-sm truncate">${user.username || user.email || 'Unknown'}</p>
+                            <p class="text-xs text-gray-500">เข้าร่วมเมื่อเร็วๆ นี้</p>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                container.innerHTML = '<p class="text-red-500 text-center py-2">เกิดข้อผิดพลาด</p>';
+            }
+        }
+
+        // Load Top Users
+        async function loadTopUsers() {
+            const container = document.getElementById('topUsers');
+            container.innerHTML = '<p class="text-gray-500 text-center py-2">กำลังโหลด...</p>';
+            
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+                
+                const sortedUsers = Object.entries(users)
+                    .map(([uid, user]) => ({ uid, ...user }))
+                    .sort((a, b) => (b.onlineTime || 0) - (a.onlineTime || 0))
+                    .slice(0, 10);
+                
+                container.innerHTML = '';
+                sortedUsers.forEach((user, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200';
+                    div.innerHTML = `
+                        <div class="text-2xl">${['🥇', '🥈', '🥉'][index] || '👤'}</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-sm truncate">${user.username || user.email || 'Unknown'}</p>
+                            <p class="text-xs text-gray-500">⏱️ ${user.onlineTime || 0} นาที</p>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                container.innerHTML = '<p class="text-red-500 text-center py-2">เกิดข้อผิดพลาด</p>';
+            }
+        }
+
+        // Load Users
+        document.getElementById('loadUsersBtn').addEventListener('click', async function() {
+            const container = document.getElementById('usersList');
+            const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+            const filter = document.getElementById('userFilter').value;
+            
+            container.innerHTML = '<p class="text-center py-8">กำลังโหลด...</p>';
+            
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+                
+                container.innerHTML = '';
+                let count = 0;
+                
+                Object.entries(users).forEach(([uid, userData]) => {
+                    const matchesSearch = !searchTerm || 
+                        (userData.email || '').toLowerCase().includes(searchTerm) ||
+                        (userData.username || '').toLowerCase().includes(searchTerm);
+                    
+                    const matchesFilter = filter === 'all' ||
+                        (filter === 'admin' && userData.isAdmin) ||
+                        (filter === 'user' && !userData.isAdmin);
+                    
+                    if (matchesSearch && matchesFilter) {
+                        count++;
+                        const div = document.createElement('div');
+                        div.className = `border-2 border-black rounded-lg p-4 ${userData.isAdmin ? 'bg-red-50' : 'bg-white'}`;
+                        div.innerHTML = `
+                            <div class="flex justify-between items-start gap-4">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-bold text-lg truncate">${userData.username || userData.email || 'ไม่มีชื่อ'}</p>
+                                    <p class="text-sm text-gray-600 truncate">${userData.email || '-'}</p>
+                                    <p class="text-xs text-gray-500">UID: ${uid}</p>
+                                    <div class="mt-2 flex gap-2 flex-wrap">
+                                        ${userData.isAdmin ? '<span class="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">🛡️ Admin</span>' : ''}
+                                        ${userData.onlineTime ? `<span class="bg-blue-400 px-2 py-1 rounded text-xs font-bold">⏱️ ${userData.onlineTime} นาที</span>` : ''}
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="toggleAdmin('${uid}', ${!userData.isAdmin})" class="px-4 py-2 ${userData.isAdmin ? 'bg-gray-300' : 'bg-red-500 text-white'} border-2 border-black rounded-lg font-bold whitespace-nowrap">
+                                        ${userData.isAdmin ? '❌ ลบ' : '✅ ตั้ง'}
+                                    </button>
+                                    <button onclick="deleteUser('${uid}')" class="px-4 py-2 bg-red-600 text-white border-2 border-black rounded-lg font-bold">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        container.appendChild(div);
+                    }
+                });
+                
+                if (count === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 py-8">ไม่พบผู้ใช้</p>';
+                } else {
+                    showToast(`โหลด ${count} ผู้ใช้สำเร็จ`, 'success');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                container.innerHTML = '<p class="text-center text-red-500 py-8">เกิดข้อผิดพลาด</p>';
+            }
+        });
+
+        // Search users on input
+        document.getElementById('userSearch').addEventListener('input', function() {
+            document.getElementById('loadUsersBtn').click();
+        });
+
+        document.getElementById('userFilter').addEventListener('change', function() {
+            document.getElementById('loadUsersBtn').click();
+        });
+
+        // Toggle Admin
+        window.toggleAdmin = async function(uid, makeAdmin) {
+            try {
+                await database.ref('users/' + uid).update({ isAdmin: makeAdmin });
+                showToast(makeAdmin ? '✅ ตั้งเป็น Admin' : '❌ ลบสิทธิ์ Admin', 'success');
+                document.getElementById('loadUsersBtn').click();
+                loadStats();
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        };
+
+        // Delete User
+        window.deleteUser = async function(uid) {
+            if (uid === currentUser.uid) {
+                showToast('❌ ไม่สามารถลบตัวเองได้', 'error');
+                return;
+            }
+            
+            if (confirm('แน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?')) {
+                try {
+                    await database.ref('users/' + uid).remove();
+                    showToast('✅ ลบผู้ใช้สำเร็จ', 'success');
+                    document.getElementById('loadUsersBtn').click();
+                    loadStats();
+                } catch (error) {
+                    showToast('❌ เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        };
+
+        // Load Rooms
+        document.getElementById('loadActiveRooms').addEventListener('click', async function() {
+            const container = document.getElementById('roomsList');
+            container.innerHTML = '<p class="text-center py-8">กำลังโหลด...</p>';
+            
+            try {
+                const snapshot = await database.ref('rooms').once('value');
+                const rooms = snapshot.val() || {};
+                
+                const activeRooms = Object.entries(rooms).filter(([id, room]) => 
+                    room.active || (room.participants && Object.keys(room.participants).length > 0)
+                );
+                
+                if (activeRooms.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 py-8">ไม่มีห้องที่ใช้งานอยู่</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                activeRooms.forEach(([roomId, roomData]) => {
+                    const div = document.createElement('div');
+                    div.className = 'border-2 border-black rounded-lg p-4 bg-green-50';
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <p class="font-bold text-lg">🏠 ${roomData.name || roomId}</p>
+                                <p class="text-sm text-gray-600">ID: ${roomId}</p>
+                                <p class="text-sm">👥 ${roomData.participants ? Object.keys(roomData.participants).length : 0} คน</p>
+                                <p class="text-sm">💬 ${roomData.messages ? Object.keys(roomData.messages).length : 0} ข้อความ</p>
+                                <span class="inline-block mt-2 bg-green-500 text-white px-2 py-1 rounded text-xs font-bold">● ใช้งานอยู่</span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="viewRoom('${roomId}')" class="px-4 py-2 bg-blue-500 text-white border-2 border-black rounded-lg font-bold">
+                                    👁️
+                                </button>
+                                <button onclick="deleteRoom('${roomId}')" class="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                
+                showToast(`พบ ${activeRooms.length} ห้องที่ใช้งานอยู่`, 'success');
+            } catch (error) {
+                container.innerHTML = '<p class="text-center text-red-500 py-8">เกิดข้อผิดพลาด</p>';
+            }
+        });
+
+        document.getElementById('loadAllRooms').addEventListener('click', async function() {
+            const container = document.getElementById('roomsList');
+            container.innerHTML = '<p class="text-center py-8">กำลังโหลด...</p>';
+            
+            try {
+                const snapshot = await database.ref('rooms').once('value');
+                const rooms = snapshot.val() || {};
+                
+                if (Object.keys(rooms).length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 py-8">ไม่มีห้อง</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                Object.entries(rooms).forEach(([roomId, roomData]) => {
+                    const isActive = roomData.active || (roomData.participants && Object.keys(roomData.participants).length > 0);
+                    const div = document.createElement('div');
+                    div.className = `border-2 border-black rounded-lg p-4 ${isActive ? 'bg-green-50' : 'bg-white'}`;
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start gap-4">
+                            <div class="flex-1 min-w-0">
+                                <p class="font-bold text-lg truncate">🏠 ${roomData.name || roomId}</p>
+                                <p class="text-sm text-gray-600 truncate">ID: ${roomId}</p>
+                                <p class="text-sm">👥 ${roomData.participants ? Object.keys(roomData.participants).length : 0} คน</p>
+                                <p class="text-sm">💬 ${roomData.messages ? Object.keys(roomData.messages).length : 0} ข้อความ</p>
+                                <span class="inline-block mt-2 ${isActive ? 'bg-green-500' : 'bg-gray-400'} text-white px-2 py-1 rounded text-xs font-bold">
+                                    ${isActive ? '● ใช้งานอยู่' : '○ ไม่ได้ใช้งาน'}
+                                </span>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="viewRoom('${roomId}')" class="px-4 py-2 bg-blue-500 text-white border-2 border-black rounded-lg font-bold whitespace-nowrap">
+                                    👁️
+                                </button>
+                                <button onclick="deleteRoom('${roomId}')" class="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold whitespace-nowrap">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                
+                showToast(`โหลด ${Object.keys(rooms).length} ห้องสำเร็จ`, 'success');
+            } catch (error) {
+                container.innerHTML = '<p class="text-center text-red-500 py-8">เกิดข้อผิดพลาด</p>';
+            }
+        });
+
+        // Clear Empty Rooms
+        document.getElementById('clearEmptyRooms').addEventListener('click', async function() {
+            if (!confirm('ลบห้องว่างทั้งหมด?')) return;
+            
+            try {
+                const snapshot = await database.ref('rooms').once('value');
+                const rooms = snapshot.val() || {};
+                
+                let deleted = 0;
+                for (const [roomId, roomData] of Object.entries(rooms)) {
+                    const isEmpty = !roomData.participants || Object.keys(roomData.participants).length === 0;
+                    if (isEmpty) {
+                        await database.ref('rooms/' + roomId).remove();
+                        deleted++;
+                    }
+                }
+                
+                showToast(`✅ ลบห้องว่าง ${deleted} ห้อง`, 'success');
+                document.getElementById('loadAllRooms').click();
+                loadStats();
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // View Room
+        window.viewRoom = function(roomId) {
+            alert(`ดูห้อง: ${roomId}\n(ฟีเจอร์นี้กำลังพัฒนา)`);
+        };
+
+        // Delete Room
+        window.deleteRoom = async function(roomId) {
+            if (confirm('แน่ใจหรือไม่ว่าต้องการลบห้องนี้?')) {
+                try {
+                    await database.ref('rooms/' + roomId).remove();
+                    showToast('✅ ลบห้องสำเร็จ', 'success');
+                    document.getElementById('loadAllRooms').click();
+                    loadStats();
+                } catch (error) {
+                    showToast('❌ เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        };
+
+        // Make Admin by Email
+        document.getElementById('makeAdminBtn').addEventListener('click', async function() {
+            const email = document.getElementById('adminEmail').value.trim();
+            if (!email) {
+                showToast('กรุณากรอกอีเมล', 'warning');
+                return;
+            }
+            
+            try {
+                const snapshot = await database.ref('users').orderByChild('email').equalTo(email).once('value');
+                if (!snapshot.exists()) {
+                    showToast('❌ ไม่พบผู้ใช้', 'error');
+                    return;
+                }
+                
+                const userId = Object.keys(snapshot.val())[0];
+                await database.ref('users/' + userId).update({ isAdmin: true });
+                showToast('✅ ตั้งเป็น Admin สำเร็จ', 'success');
+                document.getElementById('adminEmail').value = '';
+                loadStats();
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Load Admins
+        document.getElementById('loadAdminsBtn').addEventListener('click', async function() {
+            const container = document.getElementById('adminsList');
+            container.innerHTML = '<p class="text-center py-4">กำลังโหลด...</p>';
+            
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+                const admins = Object.entries(users).filter(([uid, user]) => user.isAdmin);
+                
+                if (admins.length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 py-4">ไม่มี Admin</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                admins.forEach(([uid, userData]) => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center justify-between p-3 bg-red-50 rounded-lg border-2 border-red-300';
+                    div.innerHTML = `
+                        <div class="flex-1">
+                            <p class="font-bold">${userData.username || userData.email}</p>
+                            <p class="text-xs text-gray-600">${userData.email}</p>
+                        </div>
+                        <button onclick="toggleAdmin('${uid}', false)" class="px-3 py-1 bg-gray-300 border-2 border-black rounded-lg font-bold text-sm">
+                            ❌ ลบ
+                        </button>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                container.innerHTML = '<p class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</p>';
+            }
+        });
+
+        // Send Announcement
+        document.getElementById('sendAnnounce').addEventListener('click', async function() {
+            const title = document.getElementById('announceTitle').value.trim();
+            const message = document.getElementById('announceMessage').value.trim();
+            const type = document.getElementById('announceType').value;
+            
+            if (!title || !message) {
+                showToast('กรุณากรอกข้อมูลให้ครบ', 'warning');
+                return;
+            }
+            
+            try {
+                const announce = {
+                    title, message, type,
+                    timestamp: Date.now(),
+                    by: currentUser.email
+                };
+                
+                await database.ref('announcements').push(announce);
+                showToast('✅ ส่งประกาศสำเร็จ', 'success');
+                
+                document.getElementById('announceTitle').value = '';
+                document.getElementById('announceMessage').value = '';
+                loadAnnouncements();
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Load Announcements
+        async function loadAnnouncements() {
+            const container = document.getElementById('announceList');
+            try {
+                const snapshot = await database.ref('announcements').limitToLast(10).once('value');
+                const announces = snapshot.val() || {};
+                
+                if (Object.keys(announces).length === 0) {
+                    container.innerHTML = '<p class="text-center text-gray-500 py-4">ยังไม่มีประกาศ</p>';
+                    return;
+                }
+                
+                container.innerHTML = '';
+                Object.entries(announces).reverse().forEach(([id, data]) => {
+                    const div = document.createElement('div');
+                    const colors = {
+                        info: 'bg-blue-50 border-blue-400',
+                        warning: 'bg-yellow-50 border-yellow-400',
+                        success: 'bg-green-50 border-green-400',
+                        error: 'bg-red-50 border-red-400'
+                    };
+                    div.className = `${colors[data.type]} border-2 rounded-lg p-4`;
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="font-bold">${data.title}</p>
+                            <button onclick="deleteAnnounce('${id}')" class="text-red-500 font-bold">❌</button>
+                        </div>
+                        <p class="text-sm mb-2">${data.message}</p>
+                        <p class="text-xs text-gray-500">โดย: ${data.by}</p>
+                    `;
+                    container.appendChild(div);
+                });
+            } catch (error) {
+                container.innerHTML = '<p class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</p>';
+            }
+        }
+
+        window.deleteAnnounce = async function(id) {
+            if (confirm('ลบประกาศนี้?')) {
+                try {
+                    await database.ref('announcements/' + id).remove();
+                    showToast('✅ ลบประกาศสำเร็จ', 'success');
+                    loadAnnouncements();
+                } catch (error) {
+                    showToast('❌ เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        };
+
+        // Export Users
+        document.getElementById('exportUsersBtn').addEventListener('click', async function() {
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const users = snapshot.val() || {};
+                
+                const csv = 'UID,Email,Username,IsAdmin,OnlineTime\n' +
+                    Object.entries(users).map(([uid, user]) =>
+                        `${uid},${user.email || ''},${user.username || ''},${user.isAdmin || false},${user.onlineTime || 0}`
+                    ).join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'users_export.csv';
+                a.click();
+                
+                showToast('✅ ส่งออกข้อมูลสำเร็จ', 'success');
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Export Rooms
+        document.getElementById('exportRoomsBtn').addEventListener('click', async function() {
+            try {
+                const snapshot = await database.ref('rooms').once('value');
+                const rooms = snapshot.val() || {};
+                
+                const csv = 'RoomID,Name,Participants,Messages,Active\n' +
+                    Object.entries(rooms).map(([id, room]) =>
+                        `${id},${room.name || ''},${room.participants ? Object.keys(room.participants).length : 0},${room.messages ? Object.keys(room.messages).length : 0},${room.active || false}`
+                    ).join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'rooms_export.csv';
+                a.click();
+                
+                showToast('✅ ส่งออกข้อมูลสำเร็จ', 'success');
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Backup Database
+        document.getElementById('backupDB').addEventListener('click', async function() {
+            try {
+                const snapshot = await database.ref('/').once('value');
+                const data = snapshot.val();
+                
+                const json = JSON.stringify(data, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup_${Date.now()}.json`;
+                a.click();
+                
+                showToast('✅ สำรองข้อมูลสำเร็จ', 'success');
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Export Stats
+        document.getElementById('exportStats').addEventListener('click', async function() {
+            try {
+                const [usersSnap, roomsSnap] = await Promise.all([
+                    database.ref('users').once('value'),
+                    database.ref('rooms').once('value')
+                ]);
+                
+                const users = usersSnap.val() || {};
+                const rooms = roomsSnap.val() || {};
+                
+                const stats = {
+                    totalUsers: Object.keys(users).length,
+                    totalAdmins: Object.values(users).filter(u => u.isAdmin).length,
+                    totalRooms: Object.keys(rooms).length,
+                    activeRooms: Object.values(rooms).filter(r => r.active).length,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const json = JSON.stringify(stats, null, 2);
+                const blob = new Blob([json], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `stats_${Date.now()}.json`;
+                a.click();
+                
+                showToast('✅ ส่งออกสถิติสำเร็จ', 'success');
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Danger Zone Actions
+        document.getElementById('clearAllRooms').addEventListener('click', async function() {
+            if (confirm('⚠️ ลบห้องทั้งหมด? ไม่สามารถย้อนกลับได้!')) {
+                if (confirm('⚠️ แน่ใจ 100%?')) {
+                    try {
+                        await database.ref('rooms').remove();
+                        showToast('✅ ลบห้องทั้งหมดสำเร็จ', 'success');
+                        loadStats();
+                    } catch (error) {
+                        showToast('❌ เกิดข้อผิดพลาด', 'error');
+                    }
+                }
+            }
+        });
+
+        document.getElementById('clearMessages').addEventListener('click', async function() {
+            if (confirm('⚠️ ลบข้อความทั้งหมด? ไม่สามารถย้อนกลับได้!')) {
+                if (confirm('⚠️ แน่ใจ 100%?')) {
+                    try {
+                        const snapshot = await database.ref('rooms').once('value');
+                        const rooms = snapshot.val() || {};
+                        
+                        for (const roomId of Object.keys(rooms)) {
+                            await database.ref('rooms/' + roomId + '/messages').remove();
+                        }
+                        
+                        showToast('✅ ลบข้อความทั้งหมดสำเร็จ', 'success');
+                        loadStats();
+                    } catch (error) {
+                        showToast('❌ เกิดข้อผิดพลาด', 'error');
+                    }
+                }
+            }
+        });
+
+        document.getElementById('resetDB').addEventListener('click', async function() {
+            const confirm1 = prompt('พิมพ์ "RESET DATABASE" เพื่อยืนยัน:');
+            if (confirm1 !== 'RESET DATABASE') {
+                showToast('ยกเลิก', 'info');
+                return;
+            }
+            
+            const confirm2 = prompt('แน่ใจ 100%? พิมพ์ "YES":');
+            if (confirm2 !== 'YES') {
+                showToast('ยกเลิก', 'info');
+                return;
+            }
+            
+            try {
+                await database.ref('/').remove();
+                showToast('💣 รีเซ็ตฐานข้อมูลสำเร็จ - กำลังรีโหลด...', 'success');
+                setTimeout(() => location.reload(), 2000);
+            } catch (error) {
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            if (confirm('ออกจากระบบ?')) {
+                try {
+                    await auth.signOut();
+                    window.location.href = 'index.html';
+                } catch (error) {
+                    showToast('❌ เกิดข้อผิดพลาด', 'error');
+                }
+            }
+        });
+
+        // Auth State
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'LoginPage.html';
+                return;
+            }
+            
+            currentUser = user;
+            
+            try {
+                const snapshot = await database.ref('users/' + user.uid).once('value');
+                const userData = snapshot.val();
+                
+                if (!userData || !userData.isAdmin) {
+                    alert('ไม่มีสิทธิ์เข้าถึง');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                document.getElementById('headerEmail').textContent = user.email;
+                document.getElementById('currentAdminEmail').textContent = 'อีเมล: ' + user.email;
+                document.getElementById('currentAdminUID').textContent = 'UID: ' + user.uid;
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                
+                // Load initial data
+                loadStats();
+                loadRecentActivity();
+                loadTopUsers();
+                loadAnnouncements();
+                
+                showToast('✅ ยินดีต้อนรับ Admin!', 'success');
+            } catch (error) {
+                alert('เกิดข้อผิดพลาด');
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

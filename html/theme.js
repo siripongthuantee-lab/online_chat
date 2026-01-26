@@ -6,33 +6,27 @@
     
     console.log('🎨 Theme Manager loaded');
 
-    // ฟังก์ชันโหลดธีมที่บันทึกไว้
-    function loadSavedTheme() {
-        const savedTheme = localStorage.getItem('siteTheme') || 'cream';
-        console.log('📂 Loading saved theme:', savedTheme);
-        applyTheme(savedTheme);
-        return savedTheme;
-    }
-
     // ฟังก์ชันใช้ธีม
     function applyTheme(theme) {
         console.log('✨ Applying theme:', theme);
         
         // ลบ class ธีมทั้งหมด
-        document.body.classList.remove('theme-white', 'theme-dark');
+        document.body.classList.remove('theme-white', 'theme-dark', 'theme-cream');
         
         // เพิ่ม class ธีมที่เลือก
         if (theme === 'white') {
             document.body.classList.add('theme-white');
         } else if (theme === 'dark') {
             document.body.classList.add('theme-dark');
+        } else {
+            // cream เป็น default แต่เพิ่ม class เพื่อความชัดเจน
+            document.body.classList.add('theme-cream');
         }
-        // cream ไม่ต้องเพิ่ม class (เป็น default)
+        
+        console.log('✅ Theme applied. Body classes:', document.body.className);
         
         // อัพเดท UI ถ้ามีปุ่มเลือกธีม
         updateThemeButtons(theme);
-        
-        console.log('✅ Theme applied:', theme);
     }
 
     // ฟังก์ชันอัพเดทปุ่มธีม
@@ -52,7 +46,16 @@
         const selectedBtn = document.getElementById(themeMap[theme]);
         if (selectedBtn) {
             selectedBtn.classList.add('selected');
+            console.log('✅ Theme button selected:', themeMap[theme]);
         }
+    }
+
+    // ฟังก์ชันโหลดธีมที่บันทึกไว้
+    function loadSavedTheme() {
+        const savedTheme = localStorage.getItem('siteTheme') || 'cream';
+        console.log('📂 Loading saved theme:', savedTheme);
+        applyTheme(savedTheme);
+        return savedTheme;
     }
 
     // ฟังก์ชันบันทึกธีม
@@ -105,13 +108,22 @@
         const darkBtn = document.getElementById('themeDark');
 
         if (creamBtn) {
-            creamBtn.addEventListener('click', () => saveTheme('cream'));
+            creamBtn.addEventListener('click', () => {
+                console.log('🖱️ Cream theme button clicked');
+                saveTheme('cream');
+            });
         }
         if (whiteBtn) {
-            whiteBtn.addEventListener('click', () => saveTheme('white'));
+            whiteBtn.addEventListener('click', () => {
+                console.log('🖱️ White theme button clicked');
+                saveTheme('white');
+            });
         }
         if (darkBtn) {
-            darkBtn.addEventListener('click', () => saveTheme('dark'));
+            darkBtn.addEventListener('click', () => {
+                console.log('🖱️ Dark theme button clicked');
+                saveTheme('dark');
+            });
         }
 
         console.log('🔘 Theme buttons initialized');
