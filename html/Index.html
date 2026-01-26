@@ -307,7 +307,7 @@
         document.getElementById('createGroup').addEventListener('click', () => createRoom('group'));
         document.getElementById('createSpecial').addEventListener('click', () => createRoom('special'));
 
-        // ✨ Random Match - ปรับปรุงแล้ว
+        // ✨ Random Match - ปรับปรุงแล้ว (สุ่มเฉพาะห้องที่มีคนอยู่ + ลบห้องเก่า)
         document.getElementById('randomMatchBtn').addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user) {
@@ -321,22 +321,50 @@
                 // ดึงห้องทั้งหมดจาก Firebase
                 const roomsSnapshot = await database.ref('rooms').once('value');
                 const allRooms = roomsSnapshot.val() || {};
+                const currentTime = Date.now();
+                const threeMinutes = 3 * 60 * 1000; // 3 นาที
                 
-                // กรองห้องที่ active และยังไม่เต็ม
-                const availableRooms = Object.entries(allRooms).filter(([roomId, room]) => {
-                    const memberCount = room.members ? Object.keys(room.members).length : 0;
+                // ลบห้องที่ไม่มีคนอยู่เกิน 3 นาที
+                for (const [roomCode, room] of Object.entries(allRooms)) {
+                    const members = room.members || {};
+                    const memberCount = Object.keys(members).length;
+                    
+                    // ถ้าไม่มีคนในห้อง และห้องถูกสร้างมานานกว่า 3 นาที
+                    if (memberCount === 0) {
+                        const roomCreatedAt = new Date(room.createdAt).getTime();
+                        const timeDiff = currentTime - roomCreatedAt;
+                        
+                        if (timeDiff > threeMinutes) {
+                            // ลบห้องที่ว่างเปล่าเกิน 3 นาที
+                            await database.ref('rooms/' + roomCode).remove();
+                            console.log(`ลบห้อง ${roomCode} (ไม่มีคนอยู่เกิน 3 นาที)`);
+                        }
+                    }
+                }
+                
+                // ดึงข้อมูลห้องใหม่อีกครั้งหลังจากลบห้องเก่า
+                const updatedRoomsSnapshot = await database.ref('rooms').once('value');
+                const updatedRooms = updatedRoomsSnapshot.val() || {};
+                
+                // กรองห้องที่มีคนอยู่ และยังไม่เต็ม
+                const availableRooms = Object.entries(updatedRooms).filter(([roomId, room]) => {
+                    const members = room.members || {};
+                    const memberCount = Object.keys(members).length;
+                    
+                    // เงื่อนไข: ต้องมีคนอยู่อย่างน้อย 1 คน และยังไม่เต็ม
+                    const hasMembers = memberCount > 0;
                     const maxMembers = room.type === 'oneOnOne' ? 2 : 5;
                     const isNotFull = memberCount < maxMembers;
                     const isActive = room.isActive !== false;
                     const notCreatedByMe = room.createdBy !== user.uid;
                     
-                    return isActive && isNotFull && notCreatedByMe;
+                    return isActive && hasMembers && isNotFull && notCreatedByMe;
                 });
 
                 let targetRoomCode;
 
                 if (availableRooms.length > 0) {
-                    // มีห้องที่พร้อมให้เข้า - สุ่มเลือกห้อง
+                    // มีห้องที่มีคนอยู่และพร้อมให้เข้า - สุ่มเลือกห้อง
                     const randomIndex = Math.floor(Math.random() * availableRooms.length);
                     const [roomCode, roomData] = availableRooms[randomIndex];
                     targetRoomCode = roomCode;
@@ -349,7 +377,7 @@
                     
                     showToast(`✅ พบห้อง! กำลังเข้าร่วม...`, 'success');
                 } else {
-                    // ไม่มีห้องที่เหมาะสม - สร้างห้องใหม่ทันที
+                    // ไม่มีห้องที่เหมาะสม - สร้างห้องใหม่เป็นห้องแรก
                     targetRoomCode = generateRoomCode();
                     
                     await database.ref('rooms/' + targetRoomCode).set({
@@ -366,7 +394,7 @@
                         }
                     });
                     
-                    showToast('✨ สร้างห้องใหม่สำเร็จ!', 'success');
+                    showToast('✨ สร้างห้องใหม่เป็นห้องแรก! รอคนอื่นเข้าร่วม...', 'success');
                 }
 
                 // เข้าห้องทันที
