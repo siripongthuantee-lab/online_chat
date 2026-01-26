@@ -10,36 +10,15 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <link rel="stylesheet" href="theme.css">
     <style>
-        .neobrutalism-shadow {
-            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
-        }
-        @keyframes slideIn {
-            from { transform: translateX(400px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-        }
-        .modal.active {
-            display: flex;
-            animation: fadeIn 0.3s ease;
-        }
+        .neobrutalism-shadow { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+        .modal.active { display: flex; animation: fadeIn 0.3s ease; }
     </style>
 </head>
 <body class="bg-[#f5f1e8] min-h-screen flex items-center justify-center px-4 py-8">
     <div class="w-full max-w-md">
-        <!-- Logo/Header -->
         <div class="text-center mb-8">
             <div class="w-20 h-20 bg-black rounded-2xl mx-auto mb-4 flex items-center justify-center border-4 border-black neobrutalism-shadow">
                 <div class="w-12 h-12 border-4 border-white rounded-lg"></div>
@@ -48,48 +27,28 @@
             <p class="text-gray-600">ยินดีตอนรับกลับมา!</p>
         </div>
 
-        <!-- Login Form -->
         <div class="bg-white border-4 border-black rounded-2xl p-8 neobrutalism-shadow mb-6">
             <h2 class="text-2xl font-bold mb-6 text-center">เข้าสู่ระบบ</h2>
 
-            <!-- Error Message -->
             <div id="errorMessage" class="bg-red-100 border-2 border-red-500 rounded-lg p-3 text-red-700 text-sm mb-4 hidden"></div>
 
             <form id="loginForm" class="space-y-4">
-                <!-- Email Input -->
                 <div>
                     <label class="block mb-2 text-sm font-bold">อีเมล</label>
-                    <input
-                        type="email"
-                        id="email"
-                        placeholder="your@email.com"
-                        class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                        required
-                    />
+                    <input type="email" id="email" placeholder="your@email.com" 
+                        class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black" required />
                 </div>
 
-                <!-- Password Input -->
                 <div>
                     <label class="block mb-2 text-sm font-bold">รหัสผ่าน</label>
                     <div class="relative">
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="••••••••"
-                            class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                            required
-                        />
-                        <button
-                            type="button"
-                            id="togglePassword"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                        >
-                            👁️
-                        </button>
+                        <input type="password" id="password" placeholder="••••••••" 
+                            class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black" required />
+                        <button type="button" id="togglePassword" 
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">👁️</button>
                     </div>
                 </div>
 
-                <!-- Remember Me & Forgot Password -->
                 <div class="flex items-center justify-between text-sm">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" class="w-4 h-4 border-2 border-black rounded">
@@ -100,31 +59,19 @@
                     </button>
                 </div>
 
-                <!-- Login Button -->
-                <button
-                    type="submit"
-                    class="w-full bg-black text-white border-2 border-black rounded-lg py-3 font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                >
+                <button type="submit" id="loginBtn"
+                    class="w-full bg-black text-white border-2 border-black rounded-lg py-3 font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
                     เข้าสู่ระบบ
                 </button>
             </form>
 
-            <!-- Divider -->
             <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t-2 border-black"></div>
-                </div>
-                <div class="relative flex justify-center">
-                    <span class="bg-white px-4 text-sm text-gray-600">หรือ</span>
-                </div>
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t-2 border-black"></div></div>
+                <div class="relative flex justify-center"><span class="bg-white px-4 text-sm text-gray-600">หรือ</span></div>
             </div>
 
-            <!-- Google Login - แก้ไขแล้ว -->
-            <button
-                id="googleLogin"
-                type="button"
-                class="w-full bg-white border-2 border-black rounded-lg py-3 hover:bg-gray-50 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2"
-            >
+            <button id="googleLogin" type="button"
+                class="w-full bg-white border-2 border-black rounded-lg py-3 hover:bg-gray-50 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] flex items-center justify-center gap-2">
                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -134,35 +81,16 @@
                 <span class="font-bold">เข้าสู่ระบบด้วย Google</span>
             </button>
 
-            <!-- Info Box -->
             <div class="mt-4 p-3 bg-blue-50 border-2 border-blue-400 rounded-lg text-sm">
                 <p class="text-blue-700">💡 <strong>Tips:</strong> ถ้าปุ่ม Google ไม่ทำงาน ให้ลองอนุญาต Pop-up ในเบราว์เซอร์</p>
             </div>
         </div>
 
-        <!-- Register Link -->
         <div class="text-center">
-            <p class="text-gray-600">
-                ยังไม่มีบัญชี? 
-                <a href="RegisterPage.html" id="registerLink" class="text-black font-bold underline hover:no-underline">
-                    สมัครสมาชิก
-                </a>
-            </p>
-        </div>
-
-        <!-- Character -->
-        <div class="mt-8 flex justify-center">
-            <svg width="120" height="120" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="40" fill="white" stroke="black" stroke-width="3" />
-                <circle cx="50" cy="55" r="4" fill="black" />
-                <circle cx="70" cy="55" r="4" fill="black" />
-                <path d="M 45 70 Q 60 78 75 70" stroke="black" stroke-width="3" fill="none" />
-                <path d="M 85 50 L 95 50 L 93 65 L 87 65 Z" fill="#87CEEB" stroke="black" stroke-width="2" />
-            </svg>
+            <p class="text-gray-600">ยังไม่มีบัญชี? <a href="RegisterPage.html" class="text-black font-bold underline hover:no-underline">สมัครสมาชิก</a></p>
         </div>
     </div>
 
-    <!-- Forgot Password Modal -->
     <div id="forgotPasswordModal" class="modal">
         <div class="bg-white border-4 border-black rounded-2xl p-8 max-w-md w-full neobrutalism-shadow">
             <div class="space-y-4">
@@ -177,32 +105,22 @@
                 
                 <div>
                     <label class="block mb-2 text-sm font-bold">อีเมล</label>
-                    <input
-                        type="email"
-                        id="resetEmail"
-                        placeholder="your@email.com"
-                        class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                    />
+                    <input type="email" id="resetEmail" placeholder="your@email.com"
+                        class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black" />
                 </div>
 
-                <button
-                    id="sendResetEmailBtn"
-                    class="w-full bg-blue-400 text-black border-2 border-black rounded-lg py-3 font-bold hover:bg-blue-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                >
+                <button id="sendResetEmailBtn"
+                    class="w-full bg-blue-400 text-black border-2 border-black rounded-lg py-3 font-bold hover:bg-blue-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     ส่งลิงก์รีเซ็ตรหัสผ่าน
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Toast Container -->
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
     <script src="theme.js"></script>
     <script>
-        console.log('🚀 Login page loaded');
-
-        // ✅ Firebase Configuration - ใช้ config เดียวกันทุกไฟล์
         const firebaseConfig = {
             apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
             authDomain: "chat-online-project-187e9.firebaseapp.com",
@@ -214,83 +132,73 @@
             measurementId: "G-SL9N8KG89G"
         };
 
-        // Initialize Firebase
-        try {
-            firebase.initializeApp(firebaseConfig);
-            console.log('✅ Firebase initialized');
-        } catch (error) {
-            console.error('❌ Firebase error:', error);
-        }
-
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // Toast Function
+        // ✅ Input Validation
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function validatePassword(password) {
+            return password.length >= 6;
+        }
+
+        // ✅ Improved Toast
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
-            
             const colors = {
                 success: 'bg-green-400 border-green-600',
                 error: 'bg-red-400 border-red-600',
                 info: 'bg-blue-400 border-blue-600',
                 warning: 'bg-yellow-400 border-yellow-600'
             };
-            
             toast.className = `${colors[type]} border-2 border-black rounded-lg p-4 min-w-[300px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`;
-            toast.innerHTML = `
-                <div class="flex items-center justify-between gap-3">
-                    <span class="font-medium text-black">${message}</span>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-black hover:text-gray-700 font-bold">×</button>
-                </div>
-            `;
-            
+            toast.innerHTML = `<div class="flex items-center justify-between gap-3">
+                <span class="font-medium text-black">${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="text-black hover:text-gray-700 font-bold">×</button>
+            </div>`;
             container.appendChild(toast);
             setTimeout(() => toast.remove(), 5000);
         }
 
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
-            if (errorDiv) {
-                errorDiv.textContent = message;
-                errorDiv.classList.remove('hidden');
-            }
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
         }
 
         function hideError() {
-            const errorDiv = document.getElementById('errorMessage');
-            if (errorDiv) {
-                errorDiv.classList.add('hidden');
-            }
+            document.getElementById('errorMessage').classList.add('hidden');
         }
 
-        // Modal Functions
+        // Modal
         const forgotPasswordModal = document.getElementById('forgotPasswordModal');
-        const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        forgotPasswordBtn.onclick = (e) => {
+        document.getElementById('forgotPasswordBtn').onclick = (e) => {
             e.preventDefault();
             forgotPasswordModal.classList.add('active');
         };
-
-        closeModalBtn.onclick = () => {
+        document.getElementById('closeModalBtn').onclick = () => {
             forgotPasswordModal.classList.remove('active');
         };
-
         forgotPasswordModal.addEventListener('click', (e) => {
-            if (e.target === forgotPasswordModal) {
-                forgotPasswordModal.classList.remove('active');
-            }
+            if (e.target === forgotPasswordModal) forgotPasswordModal.classList.remove('active');
         });
 
-        // Send Reset Email
+        // Reset Password
         document.getElementById('sendResetEmailBtn').onclick = async function() {
             const emailInput = document.getElementById('resetEmail');
             const email = emailInput.value.trim();
             
             if (!email) {
                 showToast('❌ กรุณากรอกอีเมล', 'error');
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showToast('❌ อีเมลไม่ถูกต้อง', 'error');
                 return;
             }
 
@@ -307,6 +215,7 @@
                     forgotPasswordModal.classList.remove('active');
                     this.disabled = false;
                     this.textContent = 'ส่งลิงก์รีเซ็ตรหัสผ่าน';
+                    emailInput.value = '';
                 }, 2000);
                 
             } catch (error) {
@@ -315,11 +224,10 @@
                 this.textContent = 'ส่งลิงก์รีเซ็ตรหัสผ่าน';
                 
                 let errorMessage = 'เกิดข้อผิดพลาด';
-                if (error.code === 'auth/user-not-found') {
-                    errorMessage = '❌ ไม่พบบัญชีผู้ใช้';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = '❌ อีเมลไม่ถูกต้อง';
-                }
+                if (error.code === 'auth/user-not-found') errorMessage = '❌ ไม่พบบัญชีผู้ใช้';
+                else if (error.code === 'auth/invalid-email') errorMessage = '❌ อีเมลไม่ถูกต้อง';
+                else if (error.code === 'auth/too-many-requests') errorMessage = '⚠️ ลองบ่อยเกินไป กรุณารอสักครู่';
+                
                 showToast(errorMessage, 'error');
             }
         };
@@ -331,18 +239,37 @@
             this.textContent = input.type === 'password' ? '👁️' : '🙈';
         });
 
-        // Login Form
+        // ✅ Login Form with Validation
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideError();
 
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
 
+            // Validation
             if (!email || !password) {
                 showError('กรุณากรอกอีเมลและรหัสผ่าน');
+                showToast('❌ กรุณากรอกข้อมูลให้ครบ', 'error');
                 return;
             }
+
+            if (!validateEmail(email)) {
+                showError('รูปแบบอีเมลไม่ถูกต้อง');
+                showToast('❌ อีเมลไม่ถูกต้อง', 'error');
+                return;
+            }
+
+            if (!validatePassword(password)) {
+                showError('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
+                showToast('❌ รหัสผ่านสั้นเกินไป', 'error');
+                return;
+            }
+
+            // Disable button
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'กำลังเข้าสู่ระบบ...';
 
             try {
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -352,45 +279,37 @@
                     lastLogin: new Date().toISOString()
                 });
 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+                setTimeout(() => window.location.href = 'index.html', 1500);
             } catch (error) {
                 console.error('Login error:', error);
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'เข้าสู่ระบบ';
+                
                 let errorMessage = 'เกิดข้อผิดพลาด';
                 
-                if (error.code === 'auth/invalid-credential') {
-                    errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
-                } else if (error.code === 'auth/user-not-found') {
-                    errorMessage = 'ไม่พบบัญชีผู้ใช้';
-                } else if (error.code === 'auth/wrong-password') {
-                    errorMessage = 'รหัสผ่านไม่ถูกต้อง';
-                }
+                if (error.code === 'auth/invalid-credential') errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                else if (error.code === 'auth/user-not-found') errorMessage = 'ไม่พบบัญชีผู้ใช้';
+                else if (error.code === 'auth/wrong-password') errorMessage = 'รหัสผ่านไม่ถูกต้อง';
+                else if (error.code === 'auth/too-many-requests') errorMessage = 'พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่';
+                else if (error.code === 'auth/network-request-failed') errorMessage = 'เชื่อมต่อเครือข่ายไม่ได้';
                 
                 showError(errorMessage);
                 showToast(errorMessage, 'error');
             }
         });
 
-        // ✅ Google Login - แก้ไขให้รองรับทุกเบราว์เซอร์
+        // ✅ Google Login with Better Error Handling
         document.getElementById('googleLogin').addEventListener('click', async () => {
             hideError();
-            console.log('🔵 Google login clicked');
             
             try {
                 const provider = new firebase.auth.GoogleAuthProvider();
-                provider.setCustomParameters({
-                    prompt: 'select_account'
-                });
+                provider.setCustomParameters({ prompt: 'select_account' });
                 
-                // ⭐ ลอง Popup ก่อน ถ้าไม่ได้ใช้ Redirect
                 let result;
                 try {
-                    console.log('Trying popup...');
                     result = await auth.signInWithPopup(provider);
                 } catch (popupError) {
-                    console.log('Popup failed, trying redirect...');
-                    // ถ้า popup ไม่ได้ ให้ใช้ redirect แทน
                     if (popupError.code === 'auth/popup-blocked') {
                         showToast('⚠️ กรุณาอนุญาต Popup หรือกำลังเปลี่ยนเส้นทาง...', 'warning');
                         await auth.signInWithRedirect(provider);
@@ -399,7 +318,6 @@
                     throw popupError;
                 }
                 
-                console.log('✅ Google login success:', result.user.email);
                 showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
                 
                 const user = result.user;
@@ -418,33 +336,28 @@
                         roomsJoined: 0
                     });
                 } else {
-                    await userRef.update({
-                        lastLogin: new Date().toISOString()
-                    });
+                    await userRef.update({ lastLogin: new Date().toISOString() });
                 }
 
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
+                setTimeout(() => window.location.href = 'index.html', 1500);
                 
             } catch (error) {
-                console.error('❌ Google login error:', error);
+                console.error('Google login error:', error);
                 
                 if (error.code === 'auth/popup-closed-by-user') {
                     showToast('ยกเลิกการเข้าสู่ระบบ', 'info');
                 } else if (error.code === 'auth/cancelled-popup-request') {
-                    // User cancelled - do nothing
+                    // Do nothing
                 } else {
                     showError('ไม่สามารถเข้าสู่ระบบด้วย Google ได้');
-                    showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+                    showToast('เกิดข้อผิดพลาด: ' + (error.message || 'Unknown'), 'error');
                 }
             }
         });
 
-        // ✅ Handle Redirect Result (สำหรับกรณีที่ใช้ redirect)
+        // Handle Redirect Result
         auth.getRedirectResult().then((result) => {
             if (result.user) {
-                console.log('✅ Redirect login success:', result.user.email);
                 showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
                 
                 const user = result.user;
@@ -463,14 +376,10 @@
                             roomsJoined: 0
                         });
                     } else {
-                        return userRef.update({
-                            lastLogin: new Date().toISOString()
-                        });
+                        return userRef.update({ lastLogin: new Date().toISOString() });
                     }
                 }).then(() => {
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1000);
+                    setTimeout(() => window.location.href = 'index.html', 1000);
                 });
             }
         }).catch((error) => {
@@ -483,15 +392,10 @@
         // Check if already logged in
         auth.onAuthStateChanged((user) => {
             if (user && !forgotPasswordModal.classList.contains('active')) {
-                console.log('✅ User already logged in');
                 showToast('กำลังเข้าสู่ระบบ...', 'info');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
+                setTimeout(() => window.location.href = 'index.html', 1000);
             }
         });
-
-        console.log('✅ Login page initialized');
     </script>
 </body>
 </html>
