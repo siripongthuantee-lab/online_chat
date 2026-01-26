@@ -288,7 +288,12 @@
                     createdBy: user.uid,
                     createdAt: new Date().toISOString(),
                     isActive: true,
-                    members: {[user.uid]: true}
+                    members: {
+                        [user.uid]: {
+                            username: user.displayName || user.email.split('@')[0],
+                            joinedAt: Date.now()
+                        }
+                    }
                 });
 
                 document.getElementById('roomTypeModal').classList.remove('active');
@@ -327,10 +332,16 @@
                 // ลบห้องที่ไม่มีคนอยู่เกิน 3 นาที
                 for (const [roomCode, room] of Object.entries(allRooms)) {
                     const members = room.members || {};
-                    const memberCount = Object.keys(members).length;
+                    const memberKeys = Object.keys(members);
+                    
+                    // นับเฉพาะ member ที่เป็น object (มี username/joinedAt)
+                    const activeMemberCount = memberKeys.filter(uid => {
+                        const member = members[uid];
+                        return member && typeof member === 'object' && member.joinedAt;
+                    }).length;
                     
                     // ถ้าไม่มีคนในห้อง และห้องถูกสร้างมานานกว่า 3 นาที
-                    if (memberCount === 0) {
+                    if (activeMemberCount === 0 && room.createdAt) {
                         const roomCreatedAt = new Date(room.createdAt).getTime();
                         const timeDiff = currentTime - roomCreatedAt;
                         
@@ -349,12 +360,18 @@
                 // กรองห้องที่มีคนอยู่ และยังไม่เต็ม
                 const availableRooms = Object.entries(updatedRooms).filter(([roomId, room]) => {
                     const members = room.members || {};
-                    const memberCount = Object.keys(members).length;
+                    const memberKeys = Object.keys(members);
+                    
+                    // นับเฉพาะ member ที่เป็น object (มี username/joinedAt) 
+                    const activeMemberCount = memberKeys.filter(uid => {
+                        const member = members[uid];
+                        return member && typeof member === 'object' && member.joinedAt;
+                    }).length;
                     
                     // เงื่อนไข: ต้องมีคนอยู่อย่างน้อย 1 คน และยังไม่เต็ม
-                    const hasMembers = memberCount > 0;
+                    const hasMembers = activeMemberCount > 0;
                     const maxMembers = room.type === 'oneOnOne' ? 2 : 5;
-                    const isNotFull = memberCount < maxMembers;
+                    const isNotFull = activeMemberCount < maxMembers;
                     const isActive = room.isActive !== false;
                     const notCreatedByMe = room.createdBy !== user.uid;
                     
