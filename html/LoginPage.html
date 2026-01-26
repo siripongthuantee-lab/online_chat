@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow {
@@ -46,7 +45,7 @@
                 <div class="w-12 h-12 border-4 border-white rounded-lg"></div>
             </div>
             <h1 class="text-4xl font-bold mb-2">Online Talk</h1>
-            <p class="text-gray-600">ยินดีต้อนรับกลับมา!</p>
+            <p class="text-gray-600">ยินดีตอนรับกลับมา!</p>
         </div>
 
         <!-- Login Form -->
@@ -120,7 +119,7 @@
                 </div>
             </div>
 
-            <!-- Google Login -->
+            <!-- Google Login - แก้ไขแล้ว -->
             <button
                 id="googleLogin"
                 type="button"
@@ -135,9 +134,9 @@
                 <span class="font-bold">เข้าสู่ระบบด้วย Google</span>
             </button>
 
-            <!-- Demo Account Info -->
+            <!-- Info Box -->
             <div class="mt-4 p-3 bg-blue-50 border-2 border-blue-400 rounded-lg text-sm">
-                <p class="text-blue-700">หากไม่มีบัญชี สามารถกดปุ่ม "สมัครสมาชิก" ด้านล่าง หรือเข้าสู่ระบบด้วย Google</p>
+                <p class="text-blue-700">💡 <strong>Tips:</strong> ถ้าปุ่ม Google ไม่ทำงาน ให้ลองอนุญาต Pop-up ในเบราว์เซอร์</p>
             </div>
         </div>
 
@@ -145,7 +144,7 @@
         <div class="text-center">
             <p class="text-gray-600">
                 ยังไม่มีบัญชี? 
-                <a href="#" id="registerLink" class="text-black font-bold underline hover:no-underline">
+                <a href="RegisterPage.html" id="registerLink" class="text-black font-bold underline hover:no-underline">
                     สมัครสมาชิก
                 </a>
             </p>
@@ -184,19 +183,14 @@
                         placeholder="your@email.com"
                         class="w-full px-4 py-3 border-2 border-black rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
                     />
-                    <p class="text-xs text-gray-500 mt-1">กรอกอีเมลที่คุณใช้สมัครสมาชิก</p>
                 </div>
 
                 <button
                     id="sendResetEmailBtn"
-                    class="w-full bg-blue-400 text-black border-2 border-black rounded-lg py-3 font-bold hover:bg-blue-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                    class="w-full bg-blue-400 text-black border-2 border-black rounded-lg py-3 font-bold hover:bg-blue-500 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                 >
                     ส่งลิงก์รีเซ็ตรหัสผ่าน
                 </button>
-
-                <div class="text-sm text-gray-600 text-center">
-                    <p>💡 หลังจากได้รับอีเมล ให้คลิกลิงก์และตั้งรหัสผ่านใหม่</p>
-                </div>
             </div>
         </div>
     </div>
@@ -206,9 +200,9 @@
 
     <script src="theme.js"></script>
     <script>
-        console.log('🚀 Script loaded');
+        console.log('🚀 Login page loaded');
 
-        // Firebase Configuration
+        // ✅ Firebase Configuration - ใช้ config เดียวกันทุกไฟล์
         const firebaseConfig = {
             apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
             authDomain: "chat-online-project-187e9.firebaseapp.com",
@@ -223,15 +217,15 @@
         // Initialize Firebase
         try {
             firebase.initializeApp(firebaseConfig);
-            console.log('✅ Firebase initialized successfully');
+            console.log('✅ Firebase initialized');
         } catch (error) {
-            console.error('❌ Firebase initialization error:', error);
+            console.error('❌ Firebase error:', error);
         }
 
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // Toast Notification System
+        // Toast Function
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -243,7 +237,7 @@
                 warning: 'bg-yellow-400 border-yellow-600'
             };
             
-            toast.className = `${colors[type]} border-2 border-black rounded-lg p-4 min-w-[300px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transform transition-all`;
+            toast.className = `${colors[type]} border-2 border-black rounded-lg p-4 min-w-[300px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]`;
             toast.innerHTML = `
                 <div class="flex items-center justify-between gap-3">
                     <span class="font-medium text-black">${message}</span>
@@ -252,15 +246,9 @@
             `;
             
             container.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(400px)';
-                setTimeout(() => toast.remove(), 300);
-            }, 5000);
+            setTimeout(() => toast.remove(), 5000);
         }
 
-        // Error Message Functions
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             if (errorDiv) {
@@ -281,233 +269,190 @@
         const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
         const closeModalBtn = document.getElementById('closeModalBtn');
 
-        function openModal() {
-            console.log('📂 Opening modal');
+        forgotPasswordBtn.onclick = (e) => {
+            e.preventDefault();
             forgotPasswordModal.classList.add('active');
-            document.getElementById('resetEmail').value = '';
-            hideError();
-        }
+        };
 
-        function closeModal() {
-            console.log('📁 Closing modal');
+        closeModalBtn.onclick = () => {
             forgotPasswordModal.classList.remove('active');
-        }
+        };
 
-        // Forgot Password Button - ใช้ onclick แทน addEventListener
-        if (forgotPasswordBtn) {
-            forgotPasswordBtn.onclick = function(e) {
-                e.preventDefault();
-                console.log('🔑 Forgot password clicked');
-                openModal();
-            };
-        }
-
-        // Close Modal Button
-        if (closeModalBtn) {
-            closeModalBtn.onclick = function() {
-                closeModal();
-            };
-        }
-
-        // Close modal when clicking outside
         forgotPasswordModal.addEventListener('click', (e) => {
             if (e.target === forgotPasswordModal) {
-                closeModal();
+                forgotPasswordModal.classList.remove('active');
             }
         });
 
-        // Send Reset Email - ใช้ onclick แทน addEventListener
-        const sendResetBtn = document.getElementById('sendResetEmailBtn');
-        if (sendResetBtn) {
-            sendResetBtn.onclick = async function() {
-                console.log('📧 Send reset email clicked');
-                const emailInput = document.getElementById('resetEmail');
-                const email = emailInput.value.trim();
+        // Send Reset Email
+        document.getElementById('sendResetEmailBtn').onclick = async function() {
+            const emailInput = document.getElementById('resetEmail');
+            const email = emailInput.value.trim();
+            
+            if (!email) {
+                showToast('❌ กรุณากรอกอีเมล', 'error');
+                return;
+            }
+
+            try {
+                this.disabled = true;
+                this.textContent = 'กำลังส่ง...';
                 
-                if (!email) {
-                    showToast('❌ กรุณากรอกอีเมล', 'error');
-                    emailInput.focus();
-                    return;
-                }
-
-                if (!email.includes('@') || !email.includes('.')) {
-                    showToast('❌ รูปแบบอีเมลไม่ถูกต้อง', 'error');
-                    emailInput.focus();
-                    return;
-                }
-
-                try {
-                    // แสดงสถานะกำลังส่ง
-                    this.disabled = true;
-                    const originalText = this.textContent;
-                    this.textContent = 'กำลังส่ง...';
-                    this.style.opacity = '0.6';
-                    
-                    showToast('⏳ กำลังส่งอีเมล...', 'info');
-                    
-                    console.log('📤 Sending password reset email to:', email);
-                    
-                    // ส่งอีเมลรีเซ็ตรหัสผ่านจริงๆ
-                    await auth.sendPasswordResetEmail(email, {
-                        url: window.location.origin + '/LoginPage.html',
-                        handleCodeInApp: false
-                    });
-                    
-                    console.log('✅ Email sent successfully');
-                    
-                    // สำเร็จ!
-                    showToast('✅ ส่งลิงก์รีเซ็ตรหัสผ่านสำเร็จ!', 'success');
-                    showToast('📧 กรุณาตรวจสอบอีเมลของคุณ', 'info');
-                    showToast('⚠️ อาจอยู่ในโฟลเดอร์ Spam/Junk', 'warning');
-                    
-                    // ปิด modal หลังจาก 2 วินาที
-                    setTimeout(() => {
-                        closeModal();
-                        this.disabled = false;
-                        this.textContent = originalText;
-                        this.style.opacity = '1';
-                    }, 2000);
-                    
-                } catch (error) {
-                    console.error('❌ Password reset error:', error);
-                    
-                    // คืนค่าปุ่ม
+                await auth.sendPasswordResetEmail(email);
+                
+                showToast('✅ ส่งลิงก์รีเซ็ตรหัสผ่านสำเร็จ!', 'success');
+                showToast('📧 กรุณาตรวจสอบอีเมลของคุณ', 'info');
+                
+                setTimeout(() => {
+                    forgotPasswordModal.classList.remove('active');
                     this.disabled = false;
                     this.textContent = 'ส่งลิงก์รีเซ็ตรหัสผ่าน';
-                    this.style.opacity = '1';
-                    
-                    let errorMessage = 'เกิดข้อผิดพลาดในการส่งอีเมล';
-                    
-                    switch (error.code) {
-                        case 'auth/invalid-email':
-                            errorMessage = '❌ รูปแบบอีเมลไม่ถูกต้อง';
-                            break;
-                        case 'auth/user-not-found':
-                            errorMessage = '❌ ไม่พบบัญชีผู้ใช้ด้วยอีเมลนี้';
-                            break;
-                        case 'auth/too-many-requests':
-                            errorMessage = '⚠️ มีการร้องขอมากเกินไป กรุณารอสักครู่';
-                            break;
-                        case 'auth/network-request-failed':
-                            errorMessage = '❌ ไม่สามารถเชื่อมต่ออินเทอร์เน็ต';
-                            break;
-                        default:
-                            errorMessage = `❌ เกิดข้อผิดพลาด: ${error.message}`;
-                    }
-                    
-                    showToast(errorMessage, 'error');
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Reset error:', error);
+                this.disabled = false;
+                this.textContent = 'ส่งลิงก์รีเซ็ตรหัสผ่าน';
+                
+                let errorMessage = 'เกิดข้อผิดพลาด';
+                if (error.code === 'auth/user-not-found') {
+                    errorMessage = '❌ ไม่พบบัญชีผู้ใช้';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = '❌ อีเมลไม่ถูกต้อง';
                 }
-            };
-        }
+                showToast(errorMessage, 'error');
+            }
+        };
 
-        // กด Enter ในช่องอีเมลรีเซ็ตรหัสผ่าน
-        const resetEmailInput = document.getElementById('resetEmail');
-        if (resetEmailInput) {
-            resetEmailInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    sendResetBtn.click();
-                }
-            });
-        }
-
-        // Toggle Password Visibility
+        // Toggle Password
         document.getElementById('togglePassword').addEventListener('click', function() {
             const input = document.getElementById('password');
-            const type = input.type === 'password' ? 'text' : 'password';
-            input.type = type;
-            this.textContent = type === 'password' ? '👁️' : '🙈';
+            input.type = input.type === 'password' ? 'text' : 'password';
+            this.textContent = input.type === 'password' ? '👁️' : '🙈';
         });
 
-        // Login Form Submit
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                hideError();
+        // Login Form
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
 
-                const email = document.getElementById('email').value.trim();
-                const password = document.getElementById('password').value;
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
 
-                console.log('Attempting login with:', email);
+            if (!email || !password) {
+                showError('กรุณากรอกอีเมลและรหัสผ่าน');
+                return;
+            }
 
-                if (!email || !password) {
-                    showError('กรุณากรอกอีเมลและรหัสผ่าน');
-                    return;
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
+                
+                await database.ref('users/' + userCredential.user.uid).update({
+                    lastLogin: new Date().toISOString()
+                });
+
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Login error:', error);
+                let errorMessage = 'เกิดข้อผิดพลาด';
+                
+                if (error.code === 'auth/invalid-credential') {
+                    errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                } else if (error.code === 'auth/user-not-found') {
+                    errorMessage = 'ไม่พบบัญชีผู้ใช้';
+                } else if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'รหัสผ่านไม่ถูกต้อง';
                 }
+                
+                showError(errorMessage);
+                showToast(errorMessage, 'error');
+            }
+        });
 
+        // ✅ Google Login - แก้ไขให้รองรับทุกเบราว์เซอร์
+        document.getElementById('googleLogin').addEventListener('click', async () => {
+            hideError();
+            console.log('🔵 Google login clicked');
+            
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.setCustomParameters({
+                    prompt: 'select_account'
+                });
+                
+                // ⭐ ลอง Popup ก่อน ถ้าไม่ได้ใช้ Redirect
+                let result;
                 try {
-                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                    console.log('Login successful:', userCredential.user);
-                    showToast('เข้าสู่ระบบสำเร็จ! ยินดีต้อนรับกลับมา 🎉', 'success');
-                    
-                    // Update last login
-                    await database.ref('users/' + userCredential.user.uid).update({
+                    console.log('Trying popup...');
+                    result = await auth.signInWithPopup(provider);
+                } catch (popupError) {
+                    console.log('Popup failed, trying redirect...');
+                    // ถ้า popup ไม่ได้ ให้ใช้ redirect แทน
+                    if (popupError.code === 'auth/popup-blocked') {
+                        showToast('⚠️ กรุณาอนุญาต Popup หรือกำลังเปลี่ยนเส้นทาง...', 'warning');
+                        await auth.signInWithRedirect(provider);
+                        return;
+                    }
+                    throw popupError;
+                }
+                
+                console.log('✅ Google login success:', result.user.email);
+                showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
+                
+                const user = result.user;
+                const userRef = database.ref('users/' + user.uid);
+                const snapshot = await userRef.once('value');
+                
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        username: user.displayName || user.email.split('@')[0],
+                        email: user.email,
+                        photoURL: user.photoURL || null,
+                        createdAt: new Date().toISOString(),
+                        lastLogin: new Date().toISOString(),
+                        isAdmin: false,
+                        points: 0,
+                        roomsJoined: 0
+                    });
+                } else {
+                    await userRef.update({
                         lastLogin: new Date().toISOString()
                     });
-
-                    setTimeout(() => {
-                        window.location.href = 'index.html';
-                    }, 1500);
-                } catch (error) {
-                    console.error('Login error:', error);
-                    let errorMessage = 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
-                    
-                    switch (error.code) {
-                        case 'auth/invalid-email':
-                            errorMessage = 'อีเมลไม่ถูกต้อง';
-                            break;
-                        case 'auth/user-disabled':
-                            errorMessage = 'บัญชีผู้ใช้ถูกปิดใช้งาน';
-                            break;
-                        case 'auth/user-not-found':
-                            errorMessage = 'ไม่พบบัญชีผู้ใช้ด้วยอีเมลนี้';
-                            break;
-                        case 'auth/wrong-password':
-                            errorMessage = 'รหัสผ่านไม่ถูกต้อง';
-                            break;
-                        case 'auth/invalid-credential':
-                            errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
-                            break;
-                        case 'auth/too-many-requests':
-                            errorMessage = 'มีการพยายามเข้าสู่ระบบมากเกินไป กรุณารอสักครู่';
-                            break;
-                    }
-                    
-                    showError(errorMessage);
-                    showToast(errorMessage, 'error');
                 }
-            });
-        }
 
-        // Google Login
-        const googleLoginBtn = document.getElementById('googleLogin');
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', async () => {
-                hideError();
-                console.log('Google login clicked');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1500);
                 
-                try {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    provider.setCustomParameters({
-                        prompt: 'select_account'
-                    });
-                    
-                    console.log('Opening Google popup...');
-                    const result = await auth.signInWithPopup(provider);
-                    
-                    console.log('Google login successful:', result.user);
-                    showToast('เข้าสู่ระบบด้วย Google สำเร็จ! 🎉', 'success');
-                    
-                    const user = result.user;
+            } catch (error) {
+                console.error('❌ Google login error:', error);
+                
+                if (error.code === 'auth/popup-closed-by-user') {
+                    showToast('ยกเลิกการเข้าสู่ระบบ', 'info');
+                } else if (error.code === 'auth/cancelled-popup-request') {
+                    // User cancelled - do nothing
+                } else {
+                    showError('ไม่สามารถเข้าสู่ระบบด้วย Google ได้');
+                    showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+                }
+            }
+        });
 
-                    // Save/Update user to database
-                    const userRef = database.ref('users/' + user.uid);
-                    const snapshot = await userRef.once('value');
-                    
+        // ✅ Handle Redirect Result (สำหรับกรณีที่ใช้ redirect)
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                console.log('✅ Redirect login success:', result.user.email);
+                showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
+                
+                const user = result.user;
+                const userRef = database.ref('users/' + user.uid);
+                
+                userRef.once('value').then((snapshot) => {
                     if (!snapshot.exists()) {
-                        // New user
-                        await userRef.set({
+                        return userRef.set({
                             username: user.displayName || user.email.split('@')[0],
                             email: user.email,
                             photoURL: user.photoURL || null,
@@ -518,63 +463,35 @@
                             roomsJoined: 0
                         });
                     } else {
-                        // Existing user - update last login
-                        await userRef.update({
+                        return userRef.update({
                             lastLogin: new Date().toISOString()
                         });
                     }
-
+                }).then(() => {
                     setTimeout(() => {
                         window.location.href = 'index.html';
-                    }, 1500);
-                } catch (error) {
-                    console.error('Google login error:', error);
-                    
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        showToast('ยกเลิกการเข้าสู่ระบบ', 'info');
-                    } else if (error.code === 'auth/popup-blocked') {
-                        showError('เบราว์เซอร์บล็อค popup กรุณาอนุญาต popup สำหรับเว็บไซต์นี้');
-                        showToast('กรุณาอนุญาต popup ในเบราว์เซอร์', 'error');
-                    } else if (error.code === 'auth/cancelled-popup-request') {
-                        // User cancelled - do nothing
-                    } else {
-                        showError('ไม่สามารถเข้าสู่ระบบด้วย Google ได้: ' + error.message);
-                        showToast('เกิดข้อผิดพลาดในการเข้าสู่ระบบ', 'error');
-                    }
-                }
-            });
-        }
-
-        // Register Link
-        const registerLink = document.getElementById('registerLink');
-        if (registerLink) {
-            registerLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                showToast('กำลังไปยังหน้าสมัครสมาชิก...', 'info');
-                setTimeout(() => {
-                    window.location.href = 'RegisterPage.html';
-                }, 500);
-            });
-        }
+                    }, 1000);
+                });
+            }
+        }).catch((error) => {
+            if (error.code !== 'auth/popup-closed-by-user') {
+                console.error('Redirect error:', error);
+                showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+            }
+        });
 
         // Check if already logged in
         auth.onAuthStateChanged((user) => {
             if (user && !forgotPasswordModal.classList.contains('active')) {
-                console.log('User already logged in:', user.email);
-                showToast('คุณเข้าสู่ระบบอยู่แล้ว กำลังพาไปหน้าหลัก...', 'info');
+                console.log('✅ User already logged in');
+                showToast('กำลังเข้าสู่ระบบ...', 'info');
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1000);
-            } else {
-                console.log('No user logged in');
             }
         });
 
-        // Log when page is ready
-        window.addEventListener('load', () => {
-            console.log('✅ Page fully loaded');
-            showToast('ระบบพร้อมใช้งาน 👋', 'info');
-        });
+        console.log('✅ Login page initialized');
     </script>
 </body>
 </html>
