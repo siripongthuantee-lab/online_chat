@@ -332,6 +332,8 @@
             const code = generateRoomCode();
 
             try {
+                const username = user.displayName || user.email.split('@')[0];
+                
                 await database.ref('rooms/' + code).set({
                     code: code,
                     type: type,
@@ -341,7 +343,7 @@
                     lastActivity: Date.now(),
                     members: {
                         [user.uid]: {
-                            username: user.displayName || user.email.split('@')[0],
+                            username: username,
                             joinedAt: Date.now()
                         }
                     }
@@ -371,6 +373,7 @@
                 return;
             }
 
+            const username = user.displayName || user.email.split('@')[0];
             showToast('🎲 กำลังค้นหาห้องที่เหมาะสม...', 'info');
 
             try {
@@ -378,20 +381,28 @@
                 const roomsSnapshot = await database.ref('rooms').once('value');
                 const allRooms = roomsSnapshot.val() || {};
                 
+                console.log('All rooms:', allRooms);
+                
                 // กรองห้องที่ active และยังไม่เต็ม
                 const availableRooms = Object.entries(allRooms).filter(([roomId, room]) => {
-                    if (!room || !room.isActive) return false;
+                    if (!room || room.isActive === false) {
+                        console.log(`Room ${roomId} is not active`);
+                        return false;
+                    }
                     
                     const memberCount = room.members ? Object.keys(room.members).length : 0;
                     const maxMembers = room.type === 'oneOnOne' ? 2 : 5;
                     const isNotFull = memberCount < maxMembers;
                     const notCreatedByMe = room.createdBy !== user.uid;
                     
+                    console.log(`Room ${roomId}: members=${memberCount}, max=${maxMembers}, notFull=${isNotFull}, notMine=${notCreatedByMe}`);
+                    
                     return isNotFull && notCreatedByMe;
                 });
 
+                console.log('Available rooms:', availableRooms.length);
+
                 let targetRoomCode;
-                let isNewRoom = false;
 
                 if (availableRooms.length > 0) {
                     // มีห้องที่พร้อมให้เข้า - สุ่มเลือกห้อง
@@ -399,9 +410,11 @@
                     const [roomCode, roomData] = availableRooms[randomIndex];
                     targetRoomCode = roomCode;
                     
+                    console.log('Joining existing room:', targetRoomCode);
+                    
                     // เข้าร่วมห้องที่มีอยู่
                     await database.ref(`rooms/${roomCode}/members/${user.uid}`).set({
-                        username: user.displayName || user.email.split('@')[0],
+                        username: username,
                         joinedAt: Date.now()
                     });
                     
@@ -412,7 +425,8 @@
                 } else {
                     // ไม่มีห้องที่เหมาะสม - สร้างห้องใหม่ทันที
                     targetRoomCode = generateRoomCode();
-                    isNewRoom = true;
+                    
+                    console.log('Creating new room:', targetRoomCode);
                     
                     await database.ref('rooms/' + targetRoomCode).set({
                         code: targetRoomCode,
@@ -423,7 +437,7 @@
                         lastActivity: Date.now(),
                         members: {
                             [user.uid]: {
-                                username: user.displayName || user.email.split('@')[0],
+                                username: username,
                                 joinedAt: Date.now()
                             }
                         }
@@ -439,7 +453,7 @@
 
             } catch (error) {
                 console.error('Random match error:', error);
-                showToast('❌ เกิดข้อผิดพลาดในการจับคู่', 'error');
+                showToast('❌ เกิดข้อผิดพลาดในการจับคู่: ' + error.message, 'error');
             }
         });
 
