@@ -1107,18 +1107,18 @@
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
                 
-                // Load initial data
-                loadStats();
-                loadRecentActivity();
-                loadTopUsers();
+                // Load initial data - เพิ่ม await เพื่อให้แน่ใจว่าโหลดข้อมูลสำเร็จ
+                await loadStats();
+                await loadRecentActivity();
+                await loadTopUsers();
                 loadAnnouncements();
                 
                 showToast('✅ ยินดีต้อนรับ Admin!', 'success');
                 
-                // Load additional statistics
-                setTimeout(() => {
-                    loadRoomStatistics();
-                    loadUserStatistics();
+                // Load additional statistics - เพิ่ม await
+                setTimeout(async () => {
+                    await loadRoomStatistics();
+                    await loadUserStatistics();
                 }, 1000);
             } catch (error) {
                 alert('เกิดข้อผิดพลาด');
