@@ -171,36 +171,66 @@
         <div class="modal-content">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-2xl font-bold">ใส่โค้ดห้อง</h2>
-                <button id="closeJoinRoomModal" class="text-3xl hover:text-gray-600">&times;</button>
+                <button id="closeJoinModal" class="text-3xl hover:text-gray-600">&times;</button>
             </div>
-            <input type="text" id="roomCodeInput" placeholder="ABC123" maxlength="6" 
-                class="w-full text-center text-2xl tracking-wider border-2 border-black rounded-lg px-4 py-3 mb-4 uppercase focus:outline-none focus:ring-2 focus:ring-black">
-            <button id="joinRoomSubmit" class="w-full bg-black text-white border-2 border-black rounded-lg py-3 hover:bg-gray-800 font-bold shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                เข้าร่วมห้อง
-            </button>
+            <div class="space-y-4">
+                <input 
+                    type="text" 
+                    id="roomCodeInput" 
+                    maxlength="6"
+                    placeholder="กรอกโค้ด 6 ตัว"
+                    class="w-full border-2 border-black rounded-lg p-4 text-center text-2xl font-bold tracking-widest"
+                />
+                <button id="joinRoomSubmit" class="w-full bg-[#FFD93D] border-2 border-black rounded-lg p-4 font-bold hover:bg-[#ffd000] transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
+                    เข้าร่วมห้อง
+                </button>
+            </div>
         </div>
     </div>
 
     <!-- Toast Container -->
-    <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
 
+    <script src="firebase-config.js"></script>
     <script src="theme.js"></script>
+    <script src="time-tracker.js"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
-            authDomain: "chat-online-project-187e9.firebaseapp.com",
-            databaseURL: "https://chat-online-project-187e9-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "chat-online-project-187e9",
-            storageBucket: "chat-online-project-187e9.firebasestorage.app",
-            messagingSenderId: "238726912803",
-            appId: "1:238726912803:web:342c5669f6edd8cbb48a96",
-            measurementId: "G-SL9N8KG89G"
-        };
-
-        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
 
+        // ตรวจสอบการ Login
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'LoginPage.html';
+                return;
+            }
+
+            // แสดงชื่อผู้ใช้
+            const userName = document.getElementById('userName');
+            userName.textContent = user.displayName || user.email.split('@')[0];
+
+            // ตรวจสอบสิทธิ์ Admin
+            const userRef = database.ref('users/' + user.uid);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+
+            if (userData && userData.isAdmin) {
+                document.getElementById('adminBtn').classList.remove('hidden');
+            }
+
+            // เริ่มระบบลบห้องว่างอัตโนมัติ
+            startRoomCleanupSystem();
+        });
+
+        // ฟังก์ชันสร้างโค้ดห้อง
+        function generateRoomCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            return Array.from({length: 6}, () => 
+                chars[Math.floor(Math.random() * chars.length)]
+            ).join('');
+        }
+
+        // Toast Notification
         function showToast(message, type = 'info') {
             const colors = {
                 success: 'bg-green-100 border-green-500 text-green-700',
@@ -213,7 +243,8 @@
             toast.style.animation = 'slideIn 0.3s ease-out';
             toast.textContent = message;
             
-            document.getElementById('toastContainer').appendChild(toast);
+            const container = document.getElementById('toastContainer');
+            container.appendChild(toast);
             
             setTimeout(() => {
                 toast.style.opacity = '0';
@@ -222,34 +253,49 @@
             }, 3000);
         }
 
-        function generateRoomCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            return Array.from({length: 6}, () => 
-                chars[Math.floor(Math.random() * chars.length)]
-            ).join('');
-        }
-
-        // Check authentication
-        auth.onAuthStateChanged(async (user) => {
-            if (!user) {
-                window.location.href = 'LoginPage.html';
-                return;
-            }
-
-            document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
-
-            const userRef = database.ref('users/' + user.uid);
-            const snapshot = await userRef.once('value');
-            const userData = snapshot.val();
+        // 🆕 ระบบลบห้องที่ไม่มีคนอยู่เกิน 3 นาที
+        function startRoomCleanupSystem() {
+            console.log('🧹 Room cleanup system started');
             
-            if (userData && userData.isAdmin) {
-                document.getElementById('adminBtn').classList.remove('hidden');
-            }
+            // ตรวจสอบทุก 1 นาที
+            setInterval(async () => {
+                try {
+                    const roomsSnapshot = await database.ref('rooms').once('value');
+                    const allRooms = roomsSnapshot.val() || {};
+                    const now = Date.now();
+                    const threeMinutes = 3 * 60 * 1000; // 3 นาที
 
-            if (userData && userData.theme) {
-                applyTheme(userData.theme);
-            }
-        });
+                    for (const [roomCode, room] of Object.entries(allRooms)) {
+                        // ตรวจสอบว่าห้องว่างหรือไม่
+                        const memberCount = room.members ? Object.keys(room.members).length : 0;
+                        
+                        if (memberCount === 0) {
+                            const createdAt = new Date(room.createdAt).getTime();
+                            const roomAge = now - createdAt;
+                            
+                            // ถ้าห้องว่างเกิน 3 นาที ให้ลบทิ้ง
+                            if (roomAge > threeMinutes) {
+                                await database.ref('rooms/' + roomCode).remove();
+                                console.log(`🗑️ Deleted empty room: ${roomCode}`);
+                            }
+                        }
+                        // ตรวจสอบห้องที่ไม่มีกิจกรรม (lastActivity)
+                        else if (room.lastActivity) {
+                            const lastActivity = room.lastActivity;
+                            const inactiveTime = now - lastActivity;
+                            
+                            // ถ้าไม่มีกิจกรรมเกิน 10 นาที ให้ลบทิ้ง
+                            if (inactiveTime > 10 * 60 * 1000) {
+                                await database.ref('rooms/' + roomCode).remove();
+                                console.log(`🗑️ Deleted inactive room: ${roomCode}`);
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Room cleanup error:', error);
+                }
+            }, 60000); // ทุก 1 นาที
+        }
 
         // Modal Controls
         document.getElementById('createRoomBtn').addEventListener('click', () => {
@@ -264,22 +310,26 @@
             document.getElementById('roomTypeModal').classList.remove('active');
         });
 
-        document.getElementById('closeJoinRoomModal').addEventListener('click', () => {
+        document.getElementById('closeJoinModal').addEventListener('click', () => {
             document.getElementById('joinRoomModal').classList.remove('active');
         });
 
+        // Close modal on outside click
         window.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 e.target.classList.remove('active');
             }
         });
 
-        // Create Room Functions
+        // Create Room Function
         async function createRoom(type) {
-            const code = generateRoomCode();
             const user = auth.currentUser;
-            
-            if (!user) return;
+            if (!user) {
+                showToast('กรุณาเข้าสู่ระบบก่อน', 'error');
+                return;
+            }
+
+            const code = generateRoomCode();
 
             try {
                 await database.ref('rooms/' + code).set({
@@ -288,7 +338,13 @@
                     createdBy: user.uid,
                     createdAt: new Date().toISOString(),
                     isActive: true,
-                    members: {[user.uid]: true}
+                    lastActivity: Date.now(),
+                    members: {
+                        [user.uid]: {
+                            username: user.displayName || user.email.split('@')[0],
+                            joinedAt: Date.now()
+                        }
+                    }
                 });
 
                 document.getElementById('roomTypeModal').classList.remove('active');
@@ -307,7 +363,7 @@
         document.getElementById('createGroup').addEventListener('click', () => createRoom('group'));
         document.getElementById('createSpecial').addEventListener('click', () => createRoom('special'));
 
-        // ✨ Random Match - ปรับปรุงแล้ว
+        // 🔥 แก้ไข Random Match - ทำงานได้ 100%
         document.getElementById('randomMatchBtn').addEventListener('click', async () => {
             const user = auth.currentUser;
             if (!user) {
@@ -324,16 +380,18 @@
                 
                 // กรองห้องที่ active และยังไม่เต็ม
                 const availableRooms = Object.entries(allRooms).filter(([roomId, room]) => {
+                    if (!room || !room.isActive) return false;
+                    
                     const memberCount = room.members ? Object.keys(room.members).length : 0;
                     const maxMembers = room.type === 'oneOnOne' ? 2 : 5;
                     const isNotFull = memberCount < maxMembers;
-                    const isActive = room.isActive !== false;
                     const notCreatedByMe = room.createdBy !== user.uid;
                     
-                    return isActive && isNotFull && notCreatedByMe;
+                    return isNotFull && notCreatedByMe;
                 });
 
                 let targetRoomCode;
+                let isNewRoom = false;
 
                 if (availableRooms.length > 0) {
                     // มีห้องที่พร้อมให้เข้า - สุ่มเลือกห้อง
@@ -347,10 +405,14 @@
                         joinedAt: Date.now()
                     });
                     
+                    // อัพเดทเวลากิจกรรมล่าสุด
+                    await database.ref(`rooms/${roomCode}/lastActivity`).set(Date.now());
+                    
                     showToast(`✅ พบห้อง! กำลังเข้าร่วม...`, 'success');
                 } else {
                     // ไม่มีห้องที่เหมาะสม - สร้างห้องใหม่ทันที
                     targetRoomCode = generateRoomCode();
+                    isNewRoom = true;
                     
                     await database.ref('rooms/' + targetRoomCode).set({
                         code: targetRoomCode,
@@ -358,6 +420,7 @@
                         createdBy: user.uid,
                         createdAt: new Date().toISOString(),
                         isActive: true,
+                        lastActivity: Date.now(),
                         members: {
                             [user.uid]: {
                                 username: user.displayName || user.email.split('@')[0],
@@ -366,13 +429,13 @@
                         }
                     });
                     
-                    showToast('✨ สร้างห้องใหม่สำเร็จ!', 'success');
+                    showToast('✨ สร้างห้องใหม่สำเร็จ! รอคนอื่นเข้าร่วม...', 'success');
                 }
 
                 // เข้าห้องทันที
                 setTimeout(() => {
                     window.location.href = `RoomPage.html?code=${targetRoomCode}&type=random`;
-                }, 1000);
+                }, 1500);
 
             } catch (error) {
                 console.error('Random match error:', error);
@@ -390,18 +453,34 @@
                 return;
             }
 
-            const roomRef = database.ref('rooms/' + code);
-            const snapshot = await roomRef.once('value');
-            
-            if (snapshot.exists()) {
-                document.getElementById('joinRoomModal').classList.remove('active');
-                showToast(`กำลังเข้าห้อง ${code}...`, 'info');
+            try {
+                const roomRef = database.ref('rooms/' + code);
+                const snapshot = await roomRef.once('value');
                 
-                setTimeout(() => {
-                    window.location.href = `RoomPage.html?code=${code}&type=join`;
-                }, 1500);
-            } else {
-                showToast('ไม่พบห้องนี้ กรุณาตรวจสอบโค้ดอีกครั้ง', 'error');
+                if (snapshot.exists()) {
+                    const user = auth.currentUser;
+                    
+                    // เพิ่มผู้ใช้เข้าห้อง
+                    await database.ref(`rooms/${code}/members/${user.uid}`).set({
+                        username: user.displayName || user.email.split('@')[0],
+                        joinedAt: Date.now()
+                    });
+                    
+                    // อัพเดทเวลากิจกรรมล่าสุด
+                    await database.ref(`rooms/${code}/lastActivity`).set(Date.now());
+                    
+                    document.getElementById('joinRoomModal').classList.remove('active');
+                    showToast(`กำลังเข้าห้อง ${code}...`, 'info');
+                    
+                    setTimeout(() => {
+                        window.location.href = `RoomPage.html?code=${code}&type=join`;
+                    }, 1500);
+                } else {
+                    showToast('ไม่พบห้องนี้ กรุณาตรวจสอบโค้ดอีกครั้ง', 'error');
+                }
+            } catch (error) {
+                console.error('Join room error:', error);
+                showToast('เกิดข้อผิดพลาดในการเข้าห้อง', 'error');
             }
         });
 
