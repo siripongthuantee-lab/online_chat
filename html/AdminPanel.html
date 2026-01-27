@@ -475,6 +475,11 @@
                 const snapshot = await database.ref('users').limitToLast(10).once('value');
                 const users = snapshot.val() || {};
                 
+                if (Object.keys(users).length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีกิจกรรม</p>';
+                    return;
+                }
+                
                 container.innerHTML = '';
                 Object.entries(users).reverse().forEach(([uid, user]) => {
                     const div = document.createElement('div');
@@ -491,7 +496,14 @@
                     container.appendChild(div);
                 });
             } catch (error) {
-                container.innerHTML = '<p class="text-red-500 text-center py-2">เกิดข้อผิดพลาด</p>';
+                console.error('Error loading recent activity:', error);
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-red-500 font-bold mb-2">❌ ไม่สามารถโหลดข้อมูลได้</p>
+                        <p class="text-xs text-gray-600">กรุณาตรวจสอบ Firebase Rules</p>
+                        <p class="text-xs text-gray-500 mt-2">Error: ${error.message}</p>
+                    </div>
+                `;
             }
         }
 
@@ -503,6 +515,11 @@
             try {
                 const snapshot = await database.ref('users').once('value');
                 const users = snapshot.val() || {};
+                
+                if (Object.keys(users).length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center py-4">ยังไม่มีผู้ใช้</p>';
+                    return;
+                }
                 
                 const sortedUsers = Object.entries(users)
                     .map(([uid, user]) => ({ uid, ...user }))
@@ -523,7 +540,14 @@
                     container.appendChild(div);
                 });
             } catch (error) {
-                container.innerHTML = '<p class="text-red-500 text-center py-2">เกิดข้อผิดพลาด</p>';
+                console.error('Error loading top users:', error);
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-red-500 font-bold mb-2">❌ ไม่สามารถโหลดข้อมูลได้</p>
+                        <p class="text-xs text-gray-600">กรุณาตรวจสอบ Firebase Rules</p>
+                        <p class="text-xs text-gray-500 mt-2">Error: ${error.message}</p>
+                    </div>
+                `;
             }
         }
 
@@ -829,7 +853,14 @@
                     container.appendChild(div);
                 });
             } catch (error) {
-                container.innerHTML = '<p class="text-center text-red-500 py-4">เกิดข้อผิดพลาด</p>';
+                console.error('Error loading admins:', error);
+                container.innerHTML = `
+                    <div class="text-center py-4">
+                        <p class="text-red-500 font-bold mb-2">❌ ไม่สามารถโหลดข้อมูลได้</p>
+                        <p class="text-xs text-gray-600">กรุณาตรวจสอบ Firebase Rules</p>
+                        <p class="text-xs text-gray-500 mt-2">Error: ${error.message}</p>
+                    </div>
+                `;
             }
         });
 
@@ -914,74 +945,131 @@
         // Export Users
         document.getElementById('exportUsersBtn').addEventListener('click', async function() {
             try {
+                showToast('🔄 กำลังส่งออกข้อมูลผู้ใช้...', 'info');
+                
                 const snapshot = await database.ref('users').once('value');
                 const users = snapshot.val() || {};
                 
-                const csv = 'UID,Email,Username,IsAdmin,OnlineTime\n' +
+                if (Object.keys(users).length === 0) {
+                    showToast('⚠️ ไม่มีข้อมูลผู้ใช้', 'error');
+                    return;
+                }
+                
+                // สร้าง CSV with BOM for Thai language support
+                const BOM = '\uFEFF';
+                const csv = BOM + 'UID,Email,Username,IsAdmin,OnlineTime,CreatedAt\n' +
                     Object.entries(users).map(([uid, user]) =>
-                        `${uid},${user.email || ''},${user.username || ''},${user.isAdmin || false},${user.onlineTime || 0}`
+                        `${uid},"${user.email || ''}","${user.username || ''}",${user.isAdmin || false},${user.onlineTime || 0},"${user.createdAt || ''}"`
                     ).join('\n');
                 
-                const blob = new Blob([csv], { type: 'text/csv' });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'users_export.csv';
+                a.download = `users_export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 
-                showToast('✅ ส่งออกข้อมูลสำเร็จ', 'success');
+                showToast(`✅ ส่งออกข้อมูล ${Object.keys(users).length} ผู้ใช้สำเร็จ!`, 'success');
             } catch (error) {
-                showToast('❌ เกิดข้อผิดพลาด', 'error');
+                console.error('❌ Export users error:', error);
+                showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
             }
         });
 
         // Export Rooms
         document.getElementById('exportRoomsBtn').addEventListener('click', async function() {
             try {
+                showToast('🔄 กำลังส่งออกข้อมูลห้อง...', 'info');
+                
                 const snapshot = await database.ref('rooms').once('value');
                 const rooms = snapshot.val() || {};
                 
-                const csv = 'RoomID,Name,Participants,Messages,Active\n' +
-                    Object.entries(rooms).map(([id, room]) =>
-                        `${id},${room.name || ''},${room.participants ? Object.keys(room.participants).length : 0},${room.messages ? Object.keys(room.messages).length : 0},${room.active || false}`
-                    ).join('\n');
+                if (Object.keys(rooms).length === 0) {
+                    showToast('⚠️ ไม่มีข้อมูลห้อง', 'error');
+                    return;
+                }
                 
-                const blob = new Blob([csv], { type: 'text/csv' });
+                // สร้าง CSV with BOM for Thai language support
+                const BOM = '\uFEFF';
+                const csv = BOM + 'RoomID,Code,Type,Members,Messages,Active,CreatedAt\n' +
+                    Object.entries(rooms).map(([id, room]) => {
+                        const memberCount = room.members ? Object.keys(room.members).length : 0;
+                        const messageCount = room.messages ? Object.keys(room.messages).length : 0;
+                        return `${id},"${room.code || ''}","${room.type || ''}",${memberCount},${messageCount},${room.isActive !== false},"${room.createdAt || ''}"`;
+                    }).join('\n');
+                
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'rooms_export.csv';
+                a.download = `rooms_export_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 
-                showToast('✅ ส่งออกข้อมูลสำเร็จ', 'success');
+                showToast(`✅ ส่งออกข้อมูล ${Object.keys(rooms).length} ห้องสำเร็จ!`, 'success');
             } catch (error) {
-                showToast('❌ เกิดข้อผิดพลาด', 'error');
+                console.error('❌ Export rooms error:', error);
+                showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
             }
         });
 
         // Backup Database
         document.getElementById('backupDB').addEventListener('click', async function() {
             try {
-                const snapshot = await database.ref('/').once('value');
-                const data = snapshot.val();
+                showToast('🔄 กำลังสำรองข้อมูล...', 'info');
                 
-                const json = JSON.stringify(data, null, 2);
+                // ดึงข้อมูลทั้งหมด
+                const [usersSnap, roomsSnap, announcementsSnap] = await Promise.all([
+                    database.ref('users').once('value'),
+                    database.ref('rooms').once('value'),
+                    database.ref('announcements').once('value')
+                ]);
+                
+                const backupData = {
+                    users: usersSnap.val() || {},
+                    rooms: roomsSnap.val() || {},
+                    announcements: announcementsSnap.val() || {},
+                    metadata: {
+                        timestamp: new Date().toISOString(),
+                        exportedBy: currentUser.email,
+                        version: '2.0'
+                    }
+                };
+                
+                // สร้างไฟล์ JSON
+                const json = JSON.stringify(backupData, null, 2);
                 const blob = new Blob([json], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `backup_${Date.now()}.json`;
+                a.download = `backup_${new Date().toISOString().split('T')[0]}_${Date.now()}.json`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 
-                showToast('✅ สำรองข้อมูลสำเร็จ', 'success');
+                showToast('✅ สำรองข้อมูลสำเร็จ!', 'success');
+                console.log('✅ Backup created:', {
+                    users: Object.keys(backupData.users).length,
+                    rooms: Object.keys(backupData.rooms).length,
+                    announcements: Object.keys(backupData.announcements).length
+                });
             } catch (error) {
-                showToast('❌ เกิดข้อผิดพลาด', 'error');
+                console.error('❌ Backup error:', error);
+                showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
             }
         });
 
         // Export Stats
         document.getElementById('exportStats').addEventListener('click', async function() {
             try {
+                showToast('🔄 กำลังส่งออกสถิติ...', 'info');
+                
                 const [usersSnap, roomsSnap] = await Promise.all([
                     database.ref('users').once('value'),
                     database.ref('rooms').once('value')
@@ -990,12 +1078,37 @@
                 const users = usersSnap.val() || {};
                 const rooms = roomsSnap.val() || {};
                 
+                // คำนวณสถิติละเอียด
+                let totalMessages = 0;
+                let activeRooms = 0;
+                Object.values(rooms).forEach(room => {
+                    if (room.messages) totalMessages += Object.keys(room.messages).length;
+                    if (room.members && Object.keys(room.members).length > 0) activeRooms++;
+                });
+                
                 const stats = {
-                    totalUsers: Object.keys(users).length,
-                    totalAdmins: Object.values(users).filter(u => u.isAdmin).length,
-                    totalRooms: Object.keys(rooms).length,
-                    activeRooms: Object.values(rooms).filter(r => r.active).length,
-                    timestamp: new Date().toISOString()
+                    overview: {
+                        totalUsers: Object.keys(users).length,
+                        totalAdmins: Object.values(users).filter(u => u.isAdmin).length,
+                        totalRooms: Object.keys(rooms).length,
+                        activeRooms: activeRooms,
+                        totalMessages: totalMessages
+                    },
+                    users: {
+                        withOnlineTime: Object.values(users).filter(u => u.onlineTime).length,
+                        totalOnlineTime: Object.values(users).reduce((sum, u) => sum + (u.onlineTime || 0), 0),
+                        averageOnlineTime: Object.keys(users).length > 0 ? 
+                            Math.round(Object.values(users).reduce((sum, u) => sum + (u.onlineTime || 0), 0) / Object.keys(users).length) : 0
+                    },
+                    rooms: {
+                        empty: Object.keys(rooms).length - activeRooms,
+                        withMessages: Object.values(rooms).filter(r => r.messages).length
+                    },
+                    metadata: {
+                        exportedAt: new Date().toISOString(),
+                        exportedBy: currentUser.email,
+                        date: new Date().toLocaleDateString('th-TH')
+                    }
                 };
                 
                 const json = JSON.stringify(stats, null, 2);
@@ -1003,12 +1116,16 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `stats_${Date.now()}.json`;
+                a.download = `statistics_${new Date().toISOString().split('T')[0]}_${Date.now()}.json`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 
-                showToast('✅ ส่งออกสถิติสำเร็จ', 'success');
+                showToast('✅ ส่งออกสถิติสำเร็จ!', 'success');
             } catch (error) {
-                showToast('❌ เกิดข้อผิดพลาด', 'error');
+                console.error('❌ Export stats error:', error);
+                showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
             }
         });
 
