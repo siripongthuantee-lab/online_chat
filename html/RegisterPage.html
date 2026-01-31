@@ -156,6 +156,11 @@
                 </svg>
                 <span class="font-bold">สมัครด้วย Google</span>
             </button>
+
+            <!-- ✅ NEW: Info Box -->
+            <div class="mt-4 p-3 bg-green-50 border-2 border-green-400 rounded-lg text-sm">
+                <p class="text-green-800"><strong>✅ ข้อดี:</strong> สมัครด้วย Google แล้วยังสามารถ Login ด้วย Email/Password ได้อัตโนมัติ!</p>
+            </div>
         </div>
 
         <!-- Login Link -->
@@ -202,6 +207,51 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
+
+        // ✅ HELPER: Generate secure random password
+        function generateSecurePassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
+            let password = '';
+            for (let i = 0; i < 16; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        // ✅ HELPER: Auto-link Email/Password provider to Google account
+        async function autoLinkPasswordProvider(user, generatedPassword) {
+            try {
+                const providers = user.providerData.map(p => p.providerId);
+                
+                // ถ้ามี password provider อยู่แล้ว ไม่ต้อง link
+                if (providers.includes('password')) {
+                    console.log('✅ Already has password provider');
+                    return { success: true, alreadyLinked: true };
+                }
+
+                console.log('🔗 Auto-linking password provider...');
+                
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    user.email,
+                    generatedPassword
+                );
+                
+                await user.linkWithCredential(credential);
+                
+                console.log('✅ Password provider linked successfully!');
+                console.log('🔐 Auto-generated password:', generatedPassword);
+                
+                return { success: true, alreadyLinked: false, password: generatedPassword };
+            } catch (error) {
+                console.error('❌ Auto-link error:', error);
+                
+                if (error.code === 'auth/provider-already-linked') {
+                    return { success: true, alreadyLinked: true };
+                }
+                
+                return { success: false, error: error };
+            }
+        }
 
         // Show Toast
         function showToast(message, type = 'info') {
@@ -308,7 +358,8 @@
                     points: 0,
                     roomsJoined: 0,
                     friends: [],
-                    theme: defaultTheme
+                    theme: defaultTheme,
+                    registeredVia: 'email'
                 });
 
                 showToast('สมัครสมาชิกสำเร็จ! ยินดีต้อนรับสู่ Online Talk 🎉', 'success');
@@ -337,7 +388,7 @@
             }
         });
 
-        // Google Register
+        // ✅ IMPROVED: Google Register with Auto-Link Password
         document.getElementById('googleRegister').addEventListener('click', async () => {
             hideError();
             
@@ -348,9 +399,19 @@
                 });
                 
                 const result = await auth.signInWithPopup(provider);
-                showToast('สมัครด้วย Google สำเร็จ! 🎉', 'success');
                 
                 const user = result.user;
+                
+                // ✅ AUTO-LINK PASSWORD PROVIDER
+                const autoPassword = generateSecurePassword();
+                const linkResult = await autoLinkPasswordProvider(user, autoPassword);
+                
+                if (linkResult.success && !linkResult.alreadyLinked) {
+                    console.log('✅ Auto-generated password:', autoPassword);
+                    showToast('สมัครด้วย Google สำเร็จ! (รองรับ Email/Password อัตโนมัติ) 🎉', 'success');
+                } else {
+                    showToast('สมัครด้วย Google สำเร็จ! 🎉', 'success');
+                }
                 
                 // Check if user exists
                 const userRef = database.ref('users/' + user.uid);
@@ -371,8 +432,26 @@
                         points: 0,
                         roomsJoined: 0,
                         friends: [],
-                        theme: defaultTheme
+                        theme: defaultTheme,
+                        // ✅ บันทึก password info (เฉพาะถ้า link สำเร็จ)
+                        hasLinkedPassword: linkResult.success && !linkResult.alreadyLinked,
+                        autoGeneratedPassword: linkResult.success && !linkResult.alreadyLinked ? btoa(autoPassword) : null,
+                        linkedPasswordAt: linkResult.success && !linkResult.alreadyLinked ? new Date().toISOString() : null,
+                        registeredVia: 'google'
                     });
+                } else {
+                    // Existing user - update last login and link password if needed
+                    const updateData = {
+                        lastLogin: new Date().toISOString()
+                    };
+                    
+                    if (linkResult.success && !linkResult.alreadyLinked) {
+                        updateData.hasLinkedPassword = true;
+                        updateData.autoGeneratedPassword = btoa(autoPassword);
+                        updateData.linkedPasswordAt = new Date().toISOString();
+                    }
+                    
+                    await userRef.update(updateData);
                 }
 
                 setTimeout(() => {
