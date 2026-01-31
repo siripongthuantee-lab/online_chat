@@ -5,9 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เข้าสู่ระบบ - Online Talk</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- ✅ โหลด Firebase SDK ตามลำดับที่ถูกต้อง -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
     <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
@@ -119,8 +122,13 @@
 
     <div id="toastContainer" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
 
-    <script src="theme.js"></script>
+    <!-- ⚠️ ลบการโหลด theme.js ออกถ้าไม่จำเป็น หรือแน่ใจว่าไฟล์มีอยู่จริง -->
+    <!-- <script src="theme.js"></script> -->
+    
     <script>
+        console.log('🚀 Starting login page initialization...');
+        
+        // ✅ CRITICAL FIX: Initialize Firebase ก่อนทำอะไรทั้งหมด
         const firebaseConfig = {
             apiKey: "AIzaSyDyAVYvI5O327uh6LZAJELHpa9XHQ8_J3Q",
             authDomain: "chat-online-project-187e9.firebaseapp.com",
@@ -132,9 +140,31 @@
             measurementId: "G-SL9N8KG89G"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // ตรวจสอบว่า Firebase SDK โหลดสำเร็จหรือไม่
+        if (typeof firebase === 'undefined') {
+            console.error('❌ Firebase SDK not loaded!');
+            alert('ไม่สามารถโหลด Firebase ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+        } else {
+            console.log('✅ Firebase SDK loaded successfully');
+        }
+
+        // Initialize Firebase App
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+                console.log('✅ Firebase initialized successfully');
+            } else {
+                console.log('ℹ️ Firebase already initialized');
+            }
+        } catch (error) {
+            console.error('❌ Firebase initialization error:', error);
+            alert('ไม่สามารถเชื่อมต่อ Firebase ได้: ' + error.message);
+        }
+
         const auth = firebase.auth();
         const database = firebase.database();
+
+        console.log('✅ Auth and Database references created');
 
         // ✅ Input Validation
         function validateEmail(email) {
@@ -239,7 +269,7 @@
             this.textContent = input.type === 'password' ? '👁️' : '🙈';
         });
 
-        // ✅ FIXED LOGIN FORM - เพิ่มการ Debug และ Error Handling ที่ดีขึ้น
+        // ✅ FIXED LOGIN FORM
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             hideError();
@@ -276,19 +306,18 @@
             try {
                 console.log('📡 Calling Firebase signInWithEmailAndPassword...');
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                console.log('✅ Login successful:', userCredential.user.uid);
+                console.log('✅ Login successful! UID:', userCredential.user.uid);
                 
                 showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
                 
-                // อัพเดท lastLogin (ไม่จำเป็นต้องรอให้เสร็จ)
+                // อัพเดท lastLogin (ไม่บังคับ - ถ้าล้มเหลวก็ไม่เป็นไร)
                 try {
                     await database.ref('users/' + userCredential.user.uid).update({
                         lastLogin: new Date().toISOString()
                     });
                     console.log('✅ Updated lastLogin');
                 } catch (dbError) {
-                    console.warn('⚠️ Could not update lastLogin:', dbError);
-                    // ไม่ต้องหยุดการทำงาน ให้ดำเนินการต่อ
+                    console.warn('⚠️ Could not update lastLogin (non-critical):', dbError);
                 }
 
                 setTimeout(() => {
@@ -306,11 +335,11 @@
                 
                 let errorMessage = 'เกิดข้อผิดพลาด';
                 
-                // การจัดการ Error ที่ครอบคลุมมากขึ้น
                 switch (error.code) {
                     case 'auth/invalid-credential':
                     case 'auth/wrong-password':
                     case 'auth/user-not-found':
+                    case 'auth/invalid-login-credentials':
                         errorMessage = '❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง';
                         break;
                     case 'auth/invalid-email':
@@ -326,7 +355,7 @@
                         errorMessage = '🌐 เชื่อมต่อเครือข่ายไม่ได้ กรุณาตรวจสอบอินเทอร์เน็ต';
                         break;
                     default:
-                        errorMessage = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+                        errorMessage = `❌ ${error.message}`;
                 }
                 
                 showError(errorMessage);
@@ -334,7 +363,7 @@
             }
         });
 
-        // ✅ Google Login with Better Error Handling
+        // ✅ Google Login
         document.getElementById('googleLogin').addEventListener('click', async () => {
             hideError();
             
@@ -355,7 +384,7 @@
                     throw popupError;
                 }
                 
-                console.log('✅ Google login successful:', result.user.uid);
+                console.log('✅ Google login successful! UID:', result.user.uid);
                 showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
                 
                 const user = result.user;
@@ -382,7 +411,6 @@
                     }
                 } catch (dbError) {
                     console.warn('⚠️ Database error (non-critical):', dbError);
-                    // ไม่ต้องหยุดการทำงาน
                 }
 
                 setTimeout(() => {
@@ -407,7 +435,7 @@
         // Handle Redirect Result
         auth.getRedirectResult().then((result) => {
             if (result.user) {
-                console.log('✅ Redirect result successful:', result.user.uid);
+                console.log('✅ Redirect result successful! UID:', result.user.uid);
                 showToast('✅ เข้าสู่ระบบสำเร็จ!', 'success');
                 
                 const user = result.user;
@@ -445,13 +473,13 @@
         // Check if already logged in
         auth.onAuthStateChanged((user) => {
             if (user && !forgotPasswordModal.classList.contains('active')) {
-                console.log('✅ User already logged in:', user.uid);
+                console.log('✅ User already logged in! UID:', user.uid);
                 showToast('กำลังเข้าสู่ระบบ...', 'info');
                 setTimeout(() => window.location.href = 'index.html', 1000);
             }
         });
 
-        console.log('🚀 Login page initialized');
+        console.log('✅ Login page initialized successfully');
     </script>
 </body>
 </html>
