@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow { box-shadow: 8px 8px 0px 0px rgba(0,0,0,1); }
-        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
         .modal.active { display: flex; animation: fadeIn 0.3s ease; }
@@ -150,6 +150,9 @@
         const auth = firebase.auth();
         const database = firebase.database();
 
+        // ตัวแปรเก็บสถานะ Modal
+        let isModalOpen = false;
+
         // Helper functions
         function generateSecurePassword() {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%^&*';
@@ -214,15 +217,23 @@
 
         // Modal
         const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+        
         document.getElementById('forgotPasswordBtn').onclick = (e) => {
             e.preventDefault();
+            isModalOpen = true;
             forgotPasswordModal.classList.add('active');
         };
+        
         document.getElementById('closeModalBtn').onclick = () => {
+            isModalOpen = false;
             forgotPasswordModal.classList.remove('active');
         };
+        
         forgotPasswordModal.addEventListener('click', (e) => {
-            if (e.target === forgotPasswordModal) forgotPasswordModal.classList.remove('active');
+            if (e.target === forgotPasswordModal) {
+                isModalOpen = false;
+                forgotPasswordModal.classList.remove('active');
+            }
         });
 
         // Reset Password
@@ -240,6 +251,7 @@
                 await auth.sendPasswordResetEmail(email);
                 showToast('✅ ส่งลิงก์รีเซ็ตรหัสผ่านสำเร็จ!', 'success');
                 setTimeout(() => {
+                    isModalOpen = false;
                     forgotPasswordModal.classList.remove('active');
                     this.disabled = false;
                     this.textContent = 'ส่งลิงก์รีเซ็ตรหัสผ่าน';
@@ -377,8 +389,12 @@
 
         // Check already logged in
         auth.onAuthStateChanged((user) => {
-            if (user && !forgotPasswordModal.classList.contains('active')) {
-                setTimeout(() => window.location.href = 'index.html', 1000);
+            if (user && !isModalOpen) {
+                // ตรวจสอบว่าไม่ได้มาจากการ reset password
+                const urlParams = new URLSearchParams(window.location.search);
+                if (!urlParams.has('mode')) {
+                    setTimeout(() => window.location.href = 'index.html', 1000);
+                }
             }
         });
     </script>
