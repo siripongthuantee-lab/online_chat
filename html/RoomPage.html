@@ -8,7 +8,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     
     <link rel="stylesheet" href="theme.css">
     
@@ -569,7 +568,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomCode = urlParams.get('code');
         const database = firebase.database();
-        const storage = firebase.storage();
         let currentUser = null;
         let localStream = null;
         let peerConnections = {}; // Multiple peer connections
@@ -745,77 +743,124 @@
             }
         }
 
-        // Image upload
+        // 🖼️ Image Upload Handler - imgbb API Version
+        const IMGBB_API_KEY = '067ef27d4cd195447a850363a079c10b'; // imgbb API Key
+        
         document.getElementById('imageBtn').addEventListener('click', () => {
+            console.log('🖼️ Image button clicked');
             document.getElementById('imageInput').click();
         });
 
         document.getElementById('imageInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (file && currentUser) {
-                if (file.size > 5 * 1024 * 1024) {
-                    showToast('ไฟล์ใหญ่เกิน 5MB', 'error');
-                    e.target.value = '';
-                    return;
-                }
-
-                if (!file.type.startsWith('image/')) {
-                    showToast('กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
-                    e.target.value = '';
-                    return;
-                }
-
-                try {
-                    const uploadProgressEl = document.getElementById('uploadProgress');
-                    uploadProgressEl.classList.add('active');
-                    
-                    const timestamp = Date.now();
-                    const filename = `${timestamp}_${file.name}`;
-                    const storageRef = storage.ref(`room-images/${roomCode}/${filename}`);
-                    
-                    const uploadTask = storageRef.put(file);
-                    
-                    uploadTask.on('state_changed',
-                        (snapshot) => {
-                            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                            document.getElementById('uploadPercent').textContent = Math.round(progress) + '%';
-                        },
-                        (error) => {
-                            console.error('Upload error:', error);
-                            showToast('ไม่สามารถอัปโหลดรูปภาพได้: ' + error.message, 'error');
-                            uploadProgressEl.classList.remove('active');
-                            e.target.value = '';
-                        },
-                        async () => {
-                            try {
-                                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                                
-                                const messagesRef = database.ref('rooms/' + roomCode + '/messages');
-                                await messagesRef.push({
-                                    userId: currentUser.uid,
-                                    username: currentUser.displayName || currentUser.email.split('@')[0],
-                                    type: 'image',
-                                    imageUrl: downloadURL,
-                                    timestamp: Date.now()
-                                });
-                                
-                                uploadProgressEl.classList.remove('active');
-                                showToast('ส่งรูปภาพสำเร็จ', 'success');
-                                e.target.value = '';
-                            } catch (error) {
-                                console.error('Error saving message:', error);
-                                showToast('ไม่สามารถบันทึกข้อความได้', 'error');
-                                uploadProgressEl.classList.remove('active');
-                                e.target.value = '';
-                            }
+            
+            if (!file) {
+                console.log('⚠️ No file selected');
+                return;
+            }
+            
+            console.log('📁 File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
+            
+            // ตรวจสอบว่าล็อกอินแล้วหรือยัง
+            if (!currentUser) {
+                showToast('❌ กรุณาล็อกอินก่อนอัปโหลดรูป', 'error');
+                e.target.value = '';
+                return;
+            }
+            
+            // ตรวจสอบขนาดไฟล์ (ไม่เกิน 32MB สำหรับ imgbb)
+            if (file.size > 32 * 1024 * 1024) {
+                showToast('❌ ไฟล์ใหญ่เกิน 32MB', 'error');
+                e.target.value = '';
+                return;
+            }
+            
+            // ตรวจสอบชนิดไฟล์
+            if (!file.type.startsWith('image/')) {
+                showToast('❌ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
+                e.target.value = '';
+                return;
+            }
+            
+            // เริ่มอัปโหลด
+            try {
+                console.log('📤 Starting upload to imgbb...');
+                
+                const uploadProgressEl = document.getElementById('uploadProgress');
+                const uploadPercentEl = document.getElementById('uploadPercent');
+                uploadProgressEl.classList.add('active');
+                uploadPercentEl.textContent = 'กำลังอัปโหลด...';
+                
+                // อ่านไฟล์เป็น Base64
+                const reader = new FileReader();
+                
+                reader.onload = async (event) => {
+                    try {
+                        const base64Image = event.target.result.split(',')[1];
+                        
+                        // อัปโหลดไปยัง imgbb
+                        const formData = new FormData();
+                        formData.append('image', base64Image);
+                        
+                        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Upload failed');
                         }
-                    );
-                } catch (error) {
-                    console.error('Image upload error:', error);
-                    showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
-                    document.getElementById('uploadProgress').classList.remove('active');
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            const imageUrl = data.data.url;
+                            console.log('✅ Upload complete, URL:', imageUrl);
+                            
+                            // บันทึกข้อความลง Database
+                            const messagesRef = database.ref('rooms/' + roomCode + '/messages');
+                            await messagesRef.push({
+                                userId: currentUser.uid,
+                                username: currentUser.displayName || currentUser.email.split('@')[0],
+                                type: 'image',
+                                imageUrl: imageUrl,
+                                timestamp: Date.now()
+                            });
+                            
+                            console.log('✅ Message saved to database');
+                            
+                            // อัพเดท lastActivity
+                            await database.ref('rooms/' + roomCode + '/lastActivity').set(Date.now());
+                            
+                            uploadProgressEl.classList.remove('active');
+                            showToast('✅ ส่งรูปภาพสำเร็จ', 'success');
+                            e.target.value = '';
+                            
+                        } else {
+                            throw new Error('Upload failed');
+                        }
+                        
+                    } catch (error) {
+                        console.error('❌ Upload error:', error);
+                        showToast('❌ ไม่สามารถอัปโหลดรูปภาพได้', 'error');
+                        uploadProgressEl.classList.remove('active');
+                        e.target.value = '';
+                    }
+                };
+                
+                reader.onerror = () => {
+                    showToast('❌ ไม่สามารถอ่านไฟล์ได้', 'error');
+                    uploadProgressEl.classList.remove('active');
                     e.target.value = '';
-                }
+                };
+                
+                reader.readAsDataURL(file);
+                
+            } catch (error) {
+                console.error('❌ Image upload error:', error);
+                showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
+                document.getElementById('uploadProgress').classList.remove('active');
+                e.target.value = '';
             }
         });
 
