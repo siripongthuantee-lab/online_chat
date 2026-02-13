@@ -131,7 +131,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-2 gap-4 mb-6">
             <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
                 <div class="text-3xl mb-2">⏱️</div>
                 <p class="text-xs text-gray-600 mb-1">เวลาออนไลน์</p>
@@ -141,16 +141,6 @@
                 <div class="text-3xl mb-2">👥</div>
                 <p class="text-xs text-gray-600 mb-1">เพื่อน</p>
                 <p id="friendCount" class="text-xl font-bold">0</p>
-            </div>
-            <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
-                <div class="text-3xl mb-2">⭐</div>
-                <p class="text-xs text-gray-600 mb-1">ห้องที่เข้าร่วม</p>
-                <p id="roomsJoined" class="text-xl font-bold">0</p>
-            </div>
-            <div class="card-white bg-white border-2 border-black rounded-xl p-4 text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] setting-card">
-                <div class="text-3xl mb-2">🏆</div>
-                <p class="text-xs text-gray-600 mb-1">คะแนน</p>
-                <p id="points" class="text-xl font-bold">0</p>
             </div>
         </div>
 
@@ -488,8 +478,6 @@
             updateTimeDisplay(currentTime);
             
             document.getElementById('friendCount').textContent = userData.friends ? userData.friends.length : 0;
-            document.getElementById('roomsJoined').textContent = userData.roomsJoined || 0;
-            document.getElementById('points').textContent = userData.points || 0;
 
             if (userData.isAdmin) {
                 document.getElementById('adminBadge').classList.remove('hidden');
