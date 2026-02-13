@@ -676,8 +676,8 @@
         let currentUser = null;
         let localStream = null;
         let peerConnections = {};
-        let isMicOn = true;
-        let isVideoOn = true;
+        let isMicOn = false;  // ⭐ เริ่มต้นปิดไมค์
+        let isVideoOn = false;  // ⭐ เริ่มต้นปิดกล้อง
         let videoStates = {};
         let currentRoomData = null;
         let selectedRoomType = 'oneOnOne';
@@ -1079,6 +1079,17 @@
                     audio: true 
                 });
                 
+                // ⭐ ปิดไมค์และกล้องทันทีหลังได้ stream
+                const audioTrack = localStream.getAudioTracks()[0];
+                const videoTrack = localStream.getVideoTracks()[0];
+                
+                if (audioTrack) {
+                    audioTrack.enabled = false;  // ปิดไมค์
+                }
+                if (videoTrack) {
+                    videoTrack.enabled = false;  // ปิดกล้อง
+                }
+                
                 // แสดงวิดีโอทันทีหลังได้ stream
                 if (currentUser) {
                     const localVideo = document.getElementById(`video-${currentUser.uid}`);
@@ -1086,11 +1097,37 @@
                     
                     if (localVideo) {
                         localVideo.srcObject = localStream;
+                        // ⭐ แสดง placeholder เพราะกล้องปิดอยู่
+                        localVideo.classList.add('hidden');
                         if (localVideoOff) {
-                            localVideoOff.classList.add('hidden');
+                            localVideoOff.classList.remove('hidden');
                         }
                     }
+                    
+                    // ⭐ อัปเดตสถานะไอคอนไมค์
+                    const micIcon = document.getElementById(`mic-${currentUser.uid}`);
+                    if (micIcon) {
+                        micIcon.textContent = '🔇';
+                        micIcon.classList.add('muted');
+                    }
                 }
+                
+                // ⭐ อัปเดตสถานะปุ่มควบคุม
+                const micBtn = document.getElementById('micBtn');
+                const videoBtn = document.getElementById('videoBtn');
+                
+                if (micBtn) {
+                    micBtn.querySelector('span').textContent = '🔇';
+                    micBtn.className = 'w-16 h-16 bg-red-500 text-white border-4 border-black rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]';
+                }
+                
+                if (videoBtn) {
+                    videoBtn.querySelector('span').textContent = '🚫';
+                    videoBtn.className = 'w-16 h-16 bg-red-500 text-white border-4 border-black rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]';
+                }
+                
+                showToast('💡 ไมค์และกล้องปิดอยู่ คลิกเพื่อเปิด', 'info');
+                
             } catch (error) {
                 console.error('Media access error:', error);
                 showToast('ไม่สามารถเข้าถึงกล้องหรือไมค์ได้', 'error');
