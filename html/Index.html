@@ -462,12 +462,34 @@
                 const roomsSnapshot = await database.ref('rooms').once('value');
                 const allRooms = roomsSnapshot.val() || {};
                 
-                console.log('📊 Total rooms in database:', Object.keys(allRooms).length);
+                console.log('='.repeat(60));
+                console.log('📊 RANDOM MATCH - Starting room search');
+                console.log('Total rooms in database:', Object.keys(allRooms).length);
+                console.log('Current user UID:', user.uid);
+                console.log('='.repeat(60));
                 
-                // กรองห้องที่ active และยังไม่เต็ม และไม่ใช่ห้องของตัวเอง
+                // แสดงข้อมูลห้องทั้งหมดก่อน
+                Object.entries(allRooms).forEach(([roomId, room]) => {
+                    if (room) {
+                        const memberCount = room.members ? Object.keys(room.members).length : 0;
+                        const memberList = room.members ? Object.keys(room.members) : [];
+                        console.log(`\n📦 Room ${roomId}:`);
+                        console.log(`   Type: ${room.type}`);
+                        console.log(`   Active: ${room.isActive}`);
+                        console.log(`   Created by: ${room.createdBy}`);
+                        console.log(`   Members (${memberCount}):`, memberList);
+                    }
+                });
+                
+                console.log('\n' + '='.repeat(60));
+                console.log('🔍 Filtering available rooms...');
+                console.log('='.repeat(60));
+                
+                // กรองห้องที่ active และยังไม่เต็ม
                 const availableRooms = Object.entries(allRooms).filter(([roomId, room]) => {
                     // ตรวจสอบว่าห้อง active หรือไม่
                     if (!room || room.isActive === false) {
+                        console.log(`❌ Room ${roomId}: Not active`);
                         return false;
                     }
                     
@@ -486,22 +508,25 @@
                     
                     const isNotFull = memberCount < maxMembers;
                     const notCreatedByMe = room.createdBy !== user.uid;
-                    const notAlreadyJoined = !room.members || !room.members[user.uid];
                     
-                    console.log(`Room ${roomId}:`, {
-                        type: room.type,
-                        members: memberCount,
-                        max: maxMembers,
-                        notFull: isNotFull,
-                        notMine: notCreatedByMe,
-                        notJoined: notAlreadyJoined,
-                        eligible: isNotFull && notCreatedByMe && notAlreadyJoined
-                    });
+                    // ตรวจสอบว่ามีคนอื่นในห้องหรือไม่ (ต้องมีคนอื่นอย่างน้อย 1 คน)
+                    const hasOtherMembers = memberCount > 0;
                     
-                    return isNotFull && notCreatedByMe && notAlreadyJoined;
+                    const eligible = isNotFull && hasOtherMembers;
+                    
+                    console.log(`\n${eligible ? '✅' : '❌'} Room ${roomId}:`);
+                    console.log(`   Type: ${room.type}`);
+                    console.log(`   Members: ${memberCount}/${maxMembers}`);
+                    console.log(`   Has other members: ${hasOtherMembers}`);
+                    console.log(`   Not full: ${isNotFull}`);
+                    console.log(`   Eligible: ${eligible}`);
+                    
+                    return eligible;
                 });
 
-                console.log('✅ Available rooms found:', availableRooms.length);
+                console.log('\n' + '='.repeat(60));
+                console.log(`✅ Available rooms found: ${availableRooms.length}`);
+                console.log('='.repeat(60));
 
                 let targetRoomCode;
 
