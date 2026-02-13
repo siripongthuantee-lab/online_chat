@@ -493,6 +493,12 @@
                         return false;
                     }
                     
+                    // ⭐ กรองห้องส่วนตัว (private) ออก
+                    if (room.privacy === 'private') {
+                        console.log(`❌ Room ${roomId}: Private room (excluded from random)`);
+                        return false;
+                    }
+                    
                     // นับจำนวนสมาชิก
                     const memberCount = room.members ? Object.keys(room.members).length : 0;
                     
@@ -516,6 +522,7 @@
                     
                     console.log(`\n${eligible ? '✅' : '❌'} Room ${roomId}:`);
                     console.log(`   Type: ${room.type}`);
+                    console.log(`   Privacy: ${room.privacy || 'public'}`);
                     console.log(`   Members: ${memberCount}/${maxMembers}`);
                     console.log(`   Has other members: ${hasOtherMembers}`);
                     console.log(`   Not full: ${isNotFull}`);
