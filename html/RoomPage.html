@@ -32,7 +32,7 @@
             transform: scaleX(-1);
         }
         
-        /* 🎥 Dynamic Video Grid - ปรับตามจำนวนคนจริง ไม่มีช่องว่าง */
+        /* 🎥 Dynamic Video Grid */
         .video-grid {
             display: grid;
             gap: 12px;
@@ -40,42 +40,35 @@
             transition: all 0.3s ease;
         }
         
-        /* 1 คน - เต็มจอช่องเดียว */
         .video-grid.members-1 {
             grid-template-columns: 1fr;
             grid-template-rows: 1fr;
         }
         
-        /* 2 คน - 2 ช่องเท่านั้น (1 แถว) */
         .video-grid.members-2 {
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: 1fr;
         }
         
-        /* 3 คน - 3 ช่องเท่านั้น (2 บน, 1 ล่างกลาง) */
         .video-grid.members-3 {
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
         }
         
-        /* 4 คน - 4 ช่องเท่านั้น (2x2) */
         .video-grid.members-4 {
             grid-template-columns: repeat(2, 1fr);
             grid-template-rows: repeat(2, 1fr);
         }
         
-        /* 5 คน - 5 ช่องเต็ม (3 บน, 2 ล่าง) */
         .video-grid.members-5 {
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(2, 1fr);
         }
         
-        /* กำหนด position สำหรับ 3 คน (ช่องที่ 3 จะอยู่กึ่งกลางแถวล่าง) */
         .video-grid.members-3 .video-cell:nth-child(3) {
             grid-column: 1 / 3;
         }
         
-        /* กำหนด position สำหรับ 5 คน (2 ช่องล่างอยู่กึ่งกลาง) */
         .video-grid.members-5 .video-cell:nth-child(4) {
             grid-column: 1 / 2;
         }
@@ -84,7 +77,6 @@
             grid-column: 2 / 3;
         }
         
-        /* Video Cell Styling */
         .video-cell {
             position: relative;
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
@@ -105,17 +97,12 @@
             box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
         }
         
-        body.theme-dark .video-cell:hover {
-            box-shadow: 6px 6px 0px 0px rgba(100, 116, 139, 0.5);
-        }
-        
         .video-cell video {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
         
-        /* Placeholder เมื่อปิดกล้อง */
         .video-off-placeholder {
             position: absolute;
             inset: 0;
@@ -130,7 +117,6 @@
             display: none;
         }
         
-        /* ชื่อผู้ใช้ที่มุมล่าง */
         .video-username {
             position: absolute;
             bottom: 12px;
@@ -145,7 +131,6 @@
             z-index: 10;
         }
         
-        /* สถานะไมค์ที่มุมบน */
         .mic-status {
             position: absolute;
             top: 12px;
@@ -166,6 +151,69 @@
         .mic-status.muted {
             background: rgba(239, 68, 68, 0.9);
             border-color: #DC2626;
+        }
+        
+        /* Settings Modal */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .settings-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .settings-content {
+            background: white;
+            border: 4px solid black;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 8px 8px 0px 0px rgba(0,0,0,1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        body.theme-dark .settings-content {
+            background: #1e293b;
+            border-color: #475569;
+        }
+        
+        .setting-option {
+            border: 3px solid black;
+            border-radius: 12px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .setting-option:hover {
+            transform: translateY(-2px);
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+        }
+        
+        .setting-option.selected {
+            background: #FFD93D;
+            box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+        }
+        
+        body.theme-dark .setting-option {
+            border-color: #475569;
+        }
+        
+        body.theme-dark .setting-option.selected {
+            background: #F59E0B;
         }
         
         /* Sticker Picker */
@@ -215,7 +263,6 @@
             transform: scale(1.15);
         }
         
-        /* Image Message Styles */
         .message-image {
             max-width: 200px;
             border-radius: 8px;
@@ -228,7 +275,6 @@
             transform: scale(1.05);
         }
         
-        /* Image Preview Modal - Enhanced Zoom */
         .image-preview-modal {
             display: none;
             position: fixed;
@@ -258,11 +304,6 @@
             transition: transform 0.3s ease;
         }
         
-        .image-preview-modal img:hover {
-            transform: scale(1.02);
-        }
-        
-        /* Zoom instructions */
         .zoom-hint {
             position: absolute;
             bottom: 30px;
@@ -279,11 +320,6 @@
             pointer-events: none;
         }
         
-        body.theme-dark .zoom-hint {
-            background: rgba(245, 158, 11, 0.95);
-        }
-        
-        /* Message Bubble Styling */
         .message-bubble-self {
             background: #FFD93D !important;
             color: #000000 !important;
@@ -310,7 +346,6 @@
             border-color: #1E293B !important;
         }
         
-        /* Chat Background */
         .chat-background {
             background: linear-gradient(to bottom, #F9FAFB 0%, #F3F4F6 100%);
         }
@@ -319,7 +354,6 @@
             background: linear-gradient(to bottom, #1E293B 0%, #0F172A 100%);
         }
         
-        /* Message Time */
         .message-time {
             color: #374151 !important;
             font-weight: 700;
@@ -332,7 +366,6 @@
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         }
         
-        /* Username in message */
         .message-username {
             color: #1F2937 !important;
             font-weight: 700;
@@ -343,7 +376,6 @@
             color: #D1D5DB !important;
         }
         
-        /* Upload Progress */
         .upload-progress {
             position: fixed;
             top: 50%;
@@ -368,7 +400,6 @@
             animation: fadeIn 0.3s ease;
         }
         
-        /* Button Styling */
         .btn-image {
             background: #10B981 !important;
             border: 3px solid #000000 !important;
@@ -377,11 +408,6 @@
         
         .btn-image:hover {
             background: #059669 !important;
-        }
-        
-        body.theme-dark .btn-image {
-            background: #10B981 !important;
-            border-color: #065F46 !important;
         }
         
         .btn-sticker {
@@ -394,12 +420,6 @@
             background: #DB2777 !important;
         }
         
-        body.theme-dark .btn-sticker {
-            background: #EC4899 !important;
-            border-color: #831843 !important;
-        }
-        
-        /* Fullscreen Modal */
         .fullscreen-modal {
             display: none;
             position: fixed;
@@ -423,7 +443,7 @@
             height: 90vh;
             display: flex;
             align-items: center;
-            justify-content: center;
+            justify-center: center;
         }
         
         .fullscreen-video-wrapper video {
@@ -473,6 +493,66 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="settings-modal" onclick="if(event.target === this) closeSettingsModal()">
+        <div class="settings-content" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold">⚙️ ตั้งค่าห้อง</h2>
+                <button onclick="closeSettingsModal()" class="text-3xl hover:opacity-70">&times;</button>
+            </div>
+            
+            <!-- Room Type -->
+            <div class="mb-6">
+                <label class="block font-bold mb-3 text-lg">ประเภทห้อง</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="setting-option" data-type="oneOnOne" onclick="selectRoomType('oneOnOne')">
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">💬</div>
+                            <div class="font-bold">คุยคู่</div>
+                            <div class="text-sm opacity-70">2 คน</div>
+                        </div>
+                    </div>
+                    <div class="setting-option" data-type="group" onclick="selectRoomType('group')">
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">👥</div>
+                            <div class="font-bold">หลายคน</div>
+                            <div class="text-sm opacity-70">3-10 คน</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Privacy -->
+            <div class="mb-6">
+                <label class="block font-bold mb-3 text-lg">ความเป็นส่วนตัว</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="setting-option" data-privacy="public" onclick="selectPrivacy('public')">
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">🌍</div>
+                            <div class="font-bold">สาธารณะ</div>
+                            <div class="text-sm opacity-70">คนสุ่มเจอได้</div>
+                        </div>
+                    </div>
+                    <div class="setting-option" data-privacy="private" onclick="selectPrivacy('private')">
+                        <div class="text-center">
+                            <div class="text-3xl mb-2">🔐</div>
+                            <div class="font-bold">ส่วนตัว</div>
+                            <div class="text-sm opacity-70">ไม่ปรากฏในสุ่ม</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3 text-sm opacity-70 bg-blue-50 p-3 rounded-lg border-2 border-blue-300">
+                    💡 ห้องส่วนตัวจะไม่ปรากฏเมื่อมีคนกดสุ่มหาห้อง
+                </div>
+            </div>
+            
+            <!-- Save Button -->
+            <button onclick="saveRoomSettings()" class="w-full bg-green-500 text-white font-bold py-3 rounded-lg border-3 border-black hover:bg-green-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                💾 บันทึกการตั้งค่า
+            </button>
+        </div>
+    </div>
+
     <!-- Fullscreen Video Modal -->
     <div id="fullscreenModal" class="fullscreen-modal">
         <div class="fullscreen-video-wrapper">
@@ -482,7 +562,7 @@
         </div>
     </div>
 
-    <!-- Image Preview Modal with Zoom -->
+    <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="image-preview-modal" onclick="closeImagePreview()">
         <img id="previewImage" src="" alt="Preview" onclick="event.stopPropagation()">
         <div class="fullscreen-close" onclick="closeImagePreview(); event.stopPropagation();">×</div>
@@ -498,18 +578,25 @@
                         <span class="text-2xl">←</span>
                     </button>
                     <div>
-                        <h1 class="text-2xl font-bold text-black">🏠 ห้องแชท</h1>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-bold text-black">🏠 ห้องแชท</h1>
+                            <span id="privacyBadge" class="px-2 py-1 rounded-lg border-2 text-xs font-bold"></span>
+                        </div>
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-black">โค้ด: <span id="roomCodeDisplay" class="font-bold bg-[#FFD93D] px-2 py-1 rounded border border-black">...</span></span>
                             <button id="copyCodeBtn" class="text-xs bg-white border-2 border-black rounded px-2 py-1 hover:bg-gray-100 transition-all">📋 คัดลอก</button>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
                     <div class="flex items-center gap-2">
                         <span class="text-2xl">👥</span>
                         <span id="userCount" class="text-xl font-bold text-black">1</span>
                     </div>
+                    <!-- Settings Button -->
+                    <button id="settingsBtn" onclick="openSettingsModal()" class="px-4 py-2 bg-yellow-400 text-black border-2 border-black rounded-lg font-bold hover:bg-yellow-500 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]" style="display: none;">
+                        ⚙️ ตั้งค่า
+                    </button>
                     <button id="leaveRoomBtn" class="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg font-bold hover:bg-red-600 transition-all shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]">
                         🚪 ออกจากห้อง
                     </button>
@@ -520,9 +607,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <!-- Video Section -->
             <div class="lg:col-span-2 space-y-4">
-                <!-- Dynamic Video Grid (1-5 people) -->
                 <div id="videoGrid" class="video-grid members-1 bg-white border-4 border-black rounded-2xl p-4 neobrutalism-shadow">
-                    <!-- Video cells will be dynamically added here -->
                 </div>
 
                 <!-- Call Controls -->
@@ -548,16 +633,12 @@
                 </div>
                 
                 <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-3 chat-background">
-                    <!-- Messages will appear here -->
                 </div>
 
-                <!-- Message Input -->
                 <div class="border-t-4 border-black p-4 bg-white relative">
-                    <!-- Sticker Picker -->
                     <div id="stickerPicker" class="sticker-picker">
                         <div class="font-bold mb-2 text-sm">เลือกสติกเกอร์</div>
                         <div id="stickerGrid" class="sticker-grid">
-                            <!-- Stickers will be loaded here -->
                         </div>
                     </div>
 
@@ -594,10 +675,13 @@
         const database = firebase.database();
         let currentUser = null;
         let localStream = null;
-        let peerConnections = {}; // Multiple peer connections
+        let peerConnections = {};
         let isMicOn = true;
         let isVideoOn = true;
-        let videoStates = {}; // Track video/mic states for all users
+        let videoStates = {};
+        let currentRoomData = null;
+        let selectedRoomType = 'oneOnOne';
+        let selectedPrivacy = 'public';
 
         const configuration = {
             iceServers: [
@@ -651,20 +735,105 @@
             }
         }
 
-        // 🎥 Dynamic Video Grid Management - แสดงเฉพาะจำนวนคนจริง ไม่มีช่องว่าง
+        // Settings Modal Functions
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            modal.classList.add('active');
+            
+            // Load current settings
+            if (currentRoomData) {
+                selectedRoomType = currentRoomData.type || 'oneOnOne';
+                selectedPrivacy = currentRoomData.privacy || 'public';
+                
+                // Update UI
+                document.querySelectorAll('.setting-option[data-type]').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.type === selectedRoomType);
+                });
+                
+                document.querySelectorAll('.setting-option[data-privacy]').forEach(el => {
+                    el.classList.toggle('selected', el.dataset.privacy === selectedPrivacy);
+                });
+            }
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        function selectRoomType(type) {
+            selectedRoomType = type;
+            document.querySelectorAll('.setting-option[data-type]').forEach(el => {
+                el.classList.toggle('selected', el.dataset.type === type);
+            });
+        }
+
+        function selectPrivacy(privacy) {
+            selectedPrivacy = privacy;
+            document.querySelectorAll('.setting-option[data-privacy]').forEach(el => {
+                el.classList.toggle('selected', el.dataset.privacy === privacy);
+            });
+        }
+
+        async function saveRoomSettings() {
+            try {
+                const memberCount = currentRoomData && currentRoomData.members ? 
+                    Object.keys(currentRoomData.members).length : 1;
+                
+                let memberLimit = 2;
+                if (selectedRoomType === 'group') {
+                    memberLimit = Math.max(memberCount, 5);
+                } else {
+                    memberLimit = 2;
+                }
+
+                const updates = {
+                    type: selectedRoomType,
+                    privacy: selectedPrivacy,
+                    memberLimit: memberLimit,
+                    lastUpdated: Date.now()
+                };
+
+                await database.ref('rooms/' + roomCode).update(updates);
+                
+                closeSettingsModal();
+                showToast('✅ บันทึกการตั้งค่าสำเร็จ!', 'success');
+                
+                if (selectedPrivacy === 'private') {
+                    showToast('🔐 ห้องนี้จะไม่ปรากฏในการสุ่มอีกต่อไป', 'info');
+                } else {
+                    showToast('🌍 ห้องนี้สามารถสุ่มเจอได้แล้ว', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showToast('❌ เกิดข้อผิดพลาดในการบันทึก', 'error');
+            }
+        }
+
+        // Update Privacy Badge
+        function updatePrivacyBadge(privacy) {
+            const badge = document.getElementById('privacyBadge');
+            if (!badge) return;
+            
+            if (privacy === 'private') {
+                badge.className = 'px-2 py-1 rounded-lg border-2 text-xs font-bold bg-red-500 text-white border-red-700';
+                badge.textContent = '🔐 ส่วนตัว';
+            } else {
+                badge.className = 'px-2 py-1 rounded-lg border-2 text-xs font-bold bg-green-500 text-white border-green-700';
+                badge.textContent = '🌍 สาธารณะ';
+            }
+        }
+
+        // Video Grid Management
         function updateVideoGrid(members) {
             const grid = document.getElementById('videoGrid');
             const memberCount = Object.keys(members).length;
             
-            // Update grid class based on actual member count (ไม่มีช่องว่าง)
             grid.className = `video-grid members-${Math.min(memberCount, 5)} bg-white border-4 border-black rounded-2xl p-4 neobrutalism-shadow`;
-            
-            // Clear existing cells
             grid.innerHTML = '';
             
-            // Create video cells ONLY for members that exist (maximum 5 people)
             Object.entries(members).forEach(([uid, member], index) => {
-                if (index >= 5) return; // Maximum 5 people
+                if (index >= 5) return;
                 
                 const cell = document.createElement('div');
                 cell.className = 'video-cell';
@@ -686,7 +855,6 @@
                 
                 grid.appendChild(cell);
                 
-                // Set local stream if it's the current user
                 if (isLocal && localStream) {
                     document.getElementById(`video-${uid}`).srcObject = localStream;
                     document.getElementById(`video-off-${uid}`).classList.add('hidden');
@@ -694,7 +862,6 @@
             });
         }
 
-        // Fullscreen video
         function openFullscreen(uid, username) {
             const modal = document.getElementById('fullscreenModal');
             const video = document.getElementById('fullscreenVideo');
@@ -712,7 +879,7 @@
             document.getElementById('fullscreenModal').classList.remove('active');
         }
 
-        // Sticker data
+        // Stickers
         const stickers = [
             '😀', '😂', '😍', '🥰', '😎',
             '🤔', '😮', '😢', '😭', '😡',
@@ -734,8 +901,7 @@
         }
 
         document.getElementById('stickerBtn').addEventListener('click', () => {
-            const picker = document.getElementById('stickerPicker');
-            picker.classList.toggle('active');
+            document.getElementById('stickerPicker').classList.toggle('active');
         });
 
         document.addEventListener('click', (e) => {
@@ -749,15 +915,13 @@
         async function sendSticker(sticker) {
             if (currentUser) {
                 try {
-                    const messagesRef = database.ref('rooms/' + roomCode + '/messages');
-                    await messagesRef.push({
+                    await database.ref('rooms/' + roomCode + '/messages').push({
                         userId: currentUser.uid,
                         username: currentUser.displayName || currentUser.email.split('@')[0],
                         type: 'sticker',
                         text: sticker,
                         timestamp: Date.now()
                     });
-                    
                     document.getElementById('stickerPicker').classList.remove('active');
                 } catch (error) {
                     console.error('Send sticker error:', error);
@@ -766,62 +930,45 @@
             }
         }
 
-        // 🖼️ Image Upload Handler - imgbb API Version
-        const IMGBB_API_KEY = '067ef27d4cd195447a850363a079c10b'; // imgbb API Key
+        // Image Upload
+        const IMGBB_API_KEY = '067ef27d4cd195447a850363a079c10b';
         
         document.getElementById('imageBtn').addEventListener('click', () => {
-            console.log('🖼️ Image button clicked');
             document.getElementById('imageInput').click();
         });
 
         document.getElementById('imageInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             
-            if (!file) {
-                console.log('⚠️ No file selected');
-                return;
-            }
+            if (!file) return;
             
-            console.log('📁 File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-            
-            // ตรวจสอบว่าล็อกอินแล้วหรือยัง
             if (!currentUser) {
                 showToast('❌ กรุณาล็อกอินก่อนอัปโหลดรูป', 'error');
                 e.target.value = '';
                 return;
             }
             
-            // ตรวจสอบขนาดไฟล์ (ไม่เกิน 32MB สำหรับ imgbb)
             if (file.size > 32 * 1024 * 1024) {
                 showToast('❌ ไฟล์ใหญ่เกิน 32MB', 'error');
                 e.target.value = '';
                 return;
             }
             
-            // ตรวจสอบชนิดไฟล์
             if (!file.type.startsWith('image/')) {
                 showToast('❌ กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
                 e.target.value = '';
                 return;
             }
             
-            // เริ่มอัปโหลด
             try {
-                console.log('📤 Starting upload to imgbb...');
-                
                 const uploadProgressEl = document.getElementById('uploadProgress');
-                const uploadPercentEl = document.getElementById('uploadPercent');
                 uploadProgressEl.classList.add('active');
-                uploadPercentEl.textContent = 'กำลังอัปโหลด...';
                 
-                // อ่านไฟล์เป็น Base64
                 const reader = new FileReader();
                 
                 reader.onload = async (event) => {
                     try {
                         const base64Image = event.target.result.split(',')[1];
-                        
-                        // อัปโหลดไปยัง imgbb
                         const formData = new FormData();
                         formData.append('image', base64Image);
                         
@@ -830,64 +977,40 @@
                             body: formData
                         });
                         
-                        if (!response.ok) {
-                            throw new Error('Upload failed');
-                        }
-                        
                         const data = await response.json();
                         
                         if (data.success) {
-                            const imageUrl = data.data.url;
-                            console.log('✅ Upload complete, URL:', imageUrl);
-                            
-                            // บันทึกข้อความลง Database
-                            const messagesRef = database.ref('rooms/' + roomCode + '/messages');
-                            await messagesRef.push({
+                            await database.ref('rooms/' + roomCode + '/messages').push({
                                 userId: currentUser.uid,
                                 username: currentUser.displayName || currentUser.email.split('@')[0],
                                 type: 'image',
-                                imageUrl: imageUrl,
+                                imageUrl: data.data.url,
                                 timestamp: Date.now()
                             });
-                            
-                            console.log('✅ Message saved to database');
-                            
-                            // อัพเดท lastActivity
-                            await database.ref('rooms/' + roomCode + '/lastActivity').set(Date.now());
                             
                             uploadProgressEl.classList.remove('active');
                             showToast('✅ ส่งรูปภาพสำเร็จ', 'success');
                             e.target.value = '';
-                            
                         } else {
                             throw new Error('Upload failed');
                         }
-                        
                     } catch (error) {
-                        console.error('❌ Upload error:', error);
+                        console.error('Upload error:', error);
                         showToast('❌ ไม่สามารถอัปโหลดรูปภาพได้', 'error');
                         uploadProgressEl.classList.remove('active');
                         e.target.value = '';
                     }
                 };
                 
-                reader.onerror = () => {
-                    showToast('❌ ไม่สามารถอ่านไฟล์ได้', 'error');
-                    uploadProgressEl.classList.remove('active');
-                    e.target.value = '';
-                };
-                
                 reader.readAsDataURL(file);
                 
             } catch (error) {
-                console.error('❌ Image upload error:', error);
-                showToast('❌ เกิดข้อผิดพลาด: ' + error.message, 'error');
-                document.getElementById('uploadProgress').classList.remove('active');
+                console.error('Image upload error:', error);
+                showToast('❌ เกิดข้อผิดพลาด', 'error');
                 e.target.value = '';
             }
         });
 
-        // 🖼️ Enhanced Image Preview with Zoom
         function openImagePreview(url) {
             const modal = document.getElementById('imagePreviewModal');
             const img = document.getElementById('previewImage');
@@ -895,7 +1018,6 @@
             img.src = url;
             modal.classList.add('active');
             
-            // เพิ่มการซูมเมื่อคลิกที่รูป
             img.onclick = function(e) {
                 e.stopPropagation();
                 if (img.style.transform === 'scale(2)') {
@@ -907,7 +1029,6 @@
                 }
             };
             
-            // รีเซ็ตการซูมเมื่อเปิด
             img.style.transform = 'scale(1)';
             img.style.cursor = 'zoom-in';
         }
@@ -915,22 +1036,20 @@
         function closeImagePreview() {
             const modal = document.getElementById('imagePreviewModal');
             const img = document.getElementById('previewImage');
-            
             modal.classList.remove('active');
             img.style.transform = 'scale(1)';
         }
         
-        // ปิดด้วยปุ่ม Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                const imageModal = document.getElementById('imagePreviewModal');
-                const fullscreenModal = document.getElementById('fullscreenModal');
-                
-                if (imageModal.classList.contains('active')) {
+                if (document.getElementById('imagePreviewModal').classList.contains('active')) {
                     closeImagePreview();
                 }
-                if (fullscreenModal.classList.contains('active')) {
+                if (document.getElementById('fullscreenModal').classList.contains('active')) {
                     closeFullscreen();
+                }
+                if (document.getElementById('settingsModal').classList.contains('active')) {
+                    closeSettingsModal();
                 }
             }
         });
@@ -947,17 +1066,14 @@
             }
         }
 
-        // WebRTC signaling (simplified for multiple peers)
         function setupSignalingListeners() {
             const signalingRef = database.ref('rooms/' + roomCode + '/signaling');
-            
             signalingRef.on('child_added', async (snapshot) => {
                 const data = snapshot.val();
                 if (!data || typeof data !== 'object') return;
                 
                 Object.values(data).forEach(async (signal) => {
                     if (signal.targetUser === currentUser.uid) {
-                        // Handle signaling for peer connections
                         console.log('Received signal:', signal.type);
                     }
                 });
@@ -977,10 +1093,29 @@
             const roomSnapshot = await roomRef.once('value');
             
             if (roomSnapshot.exists()) {
+                currentRoomData = roomSnapshot.val();
+                
                 await roomRef.child('members').update({
                     [user.uid]: {
                         username: user.displayName || user.email.split('@')[0],
                         joinedAt: Date.now()
+                    }
+                });
+                
+                // Show settings button if owner
+                if (currentRoomData.createdBy === user.uid) {
+                    document.getElementById('settingsBtn').style.display = 'block';
+                }
+                
+                // Update privacy badge
+                updatePrivacyBadge(currentRoomData.privacy || 'public');
+                
+                // Listen to room changes
+                roomRef.on('value', (snapshot) => {
+                    const updatedRoom = snapshot.val();
+                    if (updatedRoom) {
+                        currentRoomData = updatedRoom;
+                        updatePrivacyBadge(updatedRoom.privacy || 'public');
                     }
                 });
                 
@@ -1009,8 +1144,6 @@
                 const members = snapshot.val() || {};
                 const count = Object.keys(members).length;
                 document.getElementById('userCount').textContent = count;
-                
-                // Update video grid - จะแสดงเฉพาะจำนวนคนที่มีจริง
                 updateVideoGrid(members);
             });
         }
@@ -1018,7 +1151,6 @@
         function displayMessage(message) {
             const container = document.getElementById('messagesContainer');
             const messageEl = document.createElement('div');
-            
             const isMyMessage = message.userId === currentUser.uid;
             
             messageEl.className = 'space-y-1';
@@ -1067,15 +1199,13 @@
             
             if (message && currentUser) {
                 try {
-                    const messagesRef = database.ref('rooms/' + roomCode + '/messages');
-                    await messagesRef.push({
+                    await database.ref('rooms/' + roomCode + '/messages').push({
                         userId: currentUser.uid,
                         username: currentUser.displayName || currentUser.email.split('@')[0],
                         type: 'text',
                         text: message,
                         timestamp: Date.now()
                     });
-                    
                     input.value = '';
                 } catch (error) {
                     console.error('Send message error:', error);
@@ -1085,11 +1215,8 @@
         }
 
         document.getElementById('sendMessageBtn').addEventListener('click', sendMessage);
-
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+            if (e.key === 'Enter') sendMessage();
         });
 
         document.getElementById('micBtn').addEventListener('click', function() {
@@ -1103,13 +1230,11 @@
                         ? 'w-16 h-16 bg-white border-4 border-black rounded-full flex items-center justify-center hover:bg-gray-100 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]'
                         : 'w-16 h-16 bg-red-500 text-white border-4 border-black rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]';
                     
-                    // Update mic status icon
                     const micIcon = document.getElementById(`mic-${currentUser.uid}`);
                     if (micIcon) {
                         micIcon.textContent = isMicOn ? '🎤' : '🔇';
                         micIcon.classList.toggle('muted', !isMicOn);
                     }
-                    
                     showToast(isMicOn ? 'เปิดไมค์' : 'ปิดไมค์', 'info');
                 }
             }
@@ -1138,7 +1263,6 @@
                             localVideoOff.classList.remove('hidden');
                         }
                     }
-                    
                     showToast(isVideoOn ? 'เปิดกล้อง' : 'ปิดกล้อง', 'info');
                 }
             }
@@ -1154,13 +1278,10 @@
                 if (localStream) {
                     localStream.getTracks().forEach(track => track.stop());
                 }
-
                 Object.values(peerConnections).forEach(pc => pc.close());
-
                 if (currentUser) {
                     await database.ref('rooms/' + roomCode + '/members/' + currentUser.uid).remove();
                 }
-
                 window.location.href = 'index.html';
             }
         }
