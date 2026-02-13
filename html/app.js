@@ -56,9 +56,9 @@ async function createRoom(type, userId, username) {
     }
 }
 
-// Random Match - แก้ไขให้ทำงานได้ถูกต้อง
+// Random Match - สุ่มเข้าห้องสาธารณะเท่านั้น และไม่สุ่มห้องเดิมซ้ำ
 async function randomMatch(userId, username) {
-    showToast('🎲 กำลังค้นหาห้องที่เหมาะสม...', 'info');
+    showToast('🎲 กำลังค้นหาห้องสาธารณะ...', 'info');
     
     try {
         const database = firebase.database();
@@ -67,25 +67,74 @@ async function randomMatch(userId, username) {
         const roomsSnapshot = await database.ref('rooms').once('value');
         const allRooms = roomsSnapshot.val() || {};
         
-        // กรองห้องที่ active และยังไม่เต็ม
+        // ดึงประวัติห้องที่เคยเข้าจาก localStorage
+        const visitedRoomsKey = `visitedRooms_${userId}`;
+        const visitedRooms = JSON.parse(localStorage.getItem(visitedRoomsKey) || '[]');
+        console.log('📝 Previously visited rooms:', visitedRooms);
+        
+        // กรองห้องที่สามารถสุ่มเข้าได้:
+        // 1. ห้องต้องเป็น active
+        // 2. ห้องต้องไม่เต็ม
+        // 3. ห้องต้องเป็นสาธารณะ (privacy === 'public' หรือไม่มีการตั้งค่า)
+        // 4. ไม่ใช่ห้องที่ตัวเองสร้าง
+        // 5. ไม่ใช่ห้องที่เคยเข้าแล้ว (ใหม่!)
         const availableRooms = Object.entries(allRooms).filter(([roomId, room]) => {
             if (!room || !room.isActive) return false;
             
+            // เช็คว่าเป็นห้องสาธารณะหรือไม่ (ถ้าไม่มีการตั้งค่าถือว่าเป็น public)
+            const isPublic = !room.privacy || room.privacy === 'public';
+            if (!isPublic) {
+                console.log(`🔐 Skipping private room: ${room.code || roomId}`);
+                return false;
+            }
+            
+            // เช็คว่าเคยเข้าห้องนี้แล้วหรือยัง
+            const roomCode = room.code || roomId;
+            if (visitedRooms.includes(roomCode)) {
+                console.log(`🔄 Already visited room: ${roomCode}`);
+                return false;
+            }
+            
             const memberCount = room.members ? Object.keys(room.members).length : 0;
-            const maxMembers = room.type === 'oneOnOne' ? 2 : 5;
+            
+            // คำนวณจำนวนสมาชิกสูงสุด
+            let maxMembers = 2; // default
+            if (room.type === 'group') {
+                maxMembers = room.memberLimit || 5;
+            } else if (room.type === 'oneOnOne') {
+                maxMembers = 2;
+            } else if (room.memberLimit) {
+                maxMembers = room.memberLimit;
+            }
+            
             const isNotFull = memberCount < maxMembers;
             const notCreatedByMe = room.createdBy !== userId;
+            const notAlreadyMember = !room.members || !room.members[userId];
             
-            return isNotFull && notCreatedByMe;
+            if (isPublic && isNotFull && notCreatedByMe && notAlreadyMember) {
+                console.log(`✅ Available public room: ${roomCode} (${memberCount}/${maxMembers} members)`);
+            }
+            
+            return isPublic && isNotFull && notCreatedByMe && notAlreadyMember;
         });
 
         let targetRoomCode;
 
         if (availableRooms.length > 0) {
-            // มีห้องที่พร้อมให้เข้า - สุ่มเลือกห้อง
+            // มีห้องสาธารณะที่พร้อมให้เข้า - สุ่มเลือกห้อง
             const randomIndex = Math.floor(Math.random() * availableRooms.length);
             const [roomCode, roomData] = availableRooms[randomIndex];
             targetRoomCode = roomCode;
+            
+            console.log(`🎯 Selected NEW room: ${roomData.code || roomCode}`);
+            
+            // บันทึกห้องที่เข้าไปในประวัติ
+            const roomCodeToSave = roomData.code || roomCode;
+            if (!visitedRooms.includes(roomCodeToSave)) {
+                visitedRooms.push(roomCodeToSave);
+                localStorage.setItem(visitedRoomsKey, JSON.stringify(visitedRooms));
+                console.log('💾 Saved room to history:', roomCodeToSave);
+            }
             
             // เข้าร่วมห้องที่มีอยู่
             await database.ref(`rooms/${roomCode}/members/${userId}`).set({
@@ -96,14 +145,34 @@ async function randomMatch(userId, username) {
             // อัพเดทเวลากิจกรรมล่าสุด
             await database.ref(`rooms/${roomCode}/lastActivity`).set(Date.now());
             
-            showToast(`✅ พบห้อง! กำลังเข้าร่วม...`, 'success');
+            const memberCount = roomData.members ? Object.keys(roomData.members).length : 0;
+            showToast(`✅ พบห้องใหม่! (${memberCount + 1} คน) กำลังเข้าร่วม...`, 'success');
         } else {
-            // ไม่มีห้องที่เหมาะสม - สร้างห้องใหม่ทันที
+            // ไม่มีห้องสาธารณะที่เหมาะสม
+            
+            // ถ้าเคยเข้าครบทุกห้องแล้ว ให้ล้างประวัติและเริ่มใหม่
+            const totalPublicRooms = Object.values(allRooms).filter(room => 
+                room && room.isActive && (!room.privacy || room.privacy === 'public')
+            ).length;
+            
+            if (visitedRooms.length > 0 && totalPublicRooms > 0) {
+                console.log('🔄 All available rooms visited. Clearing history...');
+                localStorage.removeItem(visitedRoomsKey);
+                showToast('🔄 ได้เข้าครบทุกห้องแล้ว! กำลังเริ่มต้นใหม่...', 'info');
+                
+                // เรียกฟังก์ชันตัวเองอีกครั้ง
+                setTimeout(() => randomMatch(userId, username), 1000);
+                return;
+            }
+            
+            // สร้างห้องใหม่แบบสาธารณะ
             targetRoomCode = generateRoomCode();
             
             await database.ref('rooms/' + targetRoomCode).set({
                 code: targetRoomCode,
-                type: 'random',
+                type: 'oneOnOne',
+                privacy: 'public', // สร้างเป็นห้องสาธารณะ
+                memberLimit: 2,
                 createdBy: userId,
                 createdAt: new Date().toISOString(),
                 isActive: true,
@@ -116,7 +185,12 @@ async function randomMatch(userId, username) {
                 }
             });
             
-            showToast('✨ สร้างห้องใหม่สำเร็จ! รอคนอื่นเข้าร่วม...', 'success');
+            // บันทึกห้องที่สร้างใหม่ในประวัติ
+            visitedRooms.push(targetRoomCode);
+            localStorage.setItem(visitedRoomsKey, JSON.stringify(visitedRooms));
+            
+            console.log(`🆕 Created new public room: ${targetRoomCode}`);
+            showToast('✨ สร้างห้องสาธารณะใหม่! รอคนอื่นสุ่มเข้ามา...', 'success');
         }
 
         // เข้าห้องทันที
@@ -126,8 +200,16 @@ async function randomMatch(userId, username) {
 
     } catch (error) {
         console.error('Random match error:', error);
-        showToast('❌ เกิดข้อผิดพลาดในการจับคู่', 'error');
+        showToast('❌ เกิดข้อผิดพลาดในการสุ่มห้อง', 'error');
     }
+}
+
+// ฟังก์ชันล้างประวัติห้องที่เคยเข้า (เรียกใช้จาก Console หรือปุ่มในหน้าตั้งค่า)
+function clearVisitedRooms(userId) {
+    const visitedRoomsKey = `visitedRooms_${userId}`;
+    localStorage.removeItem(visitedRoomsKey);
+    console.log('🗑️ Cleared visited rooms history');
+    showToast('✅ ล้างประวัติห้องที่เคยเข้าแล้ว', 'success');
 }
 
 // Join Room
@@ -293,4 +375,5 @@ if (typeof window !== 'undefined') {
     window.openRoomTypeModal = openRoomTypeModal;
     window.openJoinRoomModal = openJoinRoomModal;
     window.closeModal = closeModal;
+    window.clearVisitedRooms = clearVisitedRooms;
 }
