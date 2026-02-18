@@ -8,7 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+    <!-- firebase-storage ถูกลบออก: ใช้ Base64 + Realtime Database แทน เพื่อแก้ปัญหา CORS -->
     <link rel="stylesheet" href="theme.css">
     <style>
         .neobrutalism-shadow {
@@ -121,7 +121,7 @@
                         <h1 id="profileUsername" class="text-3xl font-bold">กำลังโหลด...</h1>
                         <button id="editNameBtn" class="p-1 hover:bg-gray-100 rounded-lg transition-colors">✏️</button>
                     </div>
-                    <p id="profileEmail" class="text-gray-600 mb-4">email@example.com</p>
+                    <p id="profileEmail" class="text-gray-600 mb-4">loading...</p>
                     <div class="flex items-center gap-2 justify-center md:justify-start flex-wrap">
                         <span class="inline-block bg-green-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">🟢 ออนไลน์</span>
                         <span id="adminBadge" class="hidden inline-block bg-red-400 border-2 border-black rounded-full px-4 py-1 text-sm shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-black">🛡️ Admin</span>
@@ -261,7 +261,7 @@
                         </div>
                         <div class="secondary-card bg-gray-50 border-2 border-black rounded-xl p-6">
                             <h4 class="text-lg font-bold mb-2">📞 ติดต่อเรา</h4>
-                            <p class="text-sm text-gray-600">📧 Email: mr360xv@gmail.com<br>💬 Instagram: _is_bdg_x</p>
+                            <p class="text-sm text-gray-600">📧 Email: support@onlinetalk.com<br>💬 Instagram: _is_bdg_x</p>
                         </div>
                     </div>
                 </div>
@@ -286,27 +286,23 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const database = firebase.database();
-        const storage = firebase.storage();
+        // ไม่มี firebase.storage() แล้ว ใช้ Base64 แทน
         let currentUser = null;
 
-        // ===== ระบบนับเวลาออนไลน์แบบปรับปรุงใหม่ =====
+        // ===== ระบบนับเวลาออนไลน์ =====
         let onlineTimer = null;
         let sessionStartTime = null;
         let lastSavedMinutes = 0;
 
-        // ฟังก์ชันแปลงนาทีเป็นข้อความที่อ่านง่าย
         function formatTime(minutes) {
             if (!minutes || minutes === 0) return '0 นาที';
-            
             const hours = Math.floor(minutes / 60);
             const mins = Math.round(minutes % 60);
-            
             if (hours === 0) return `${mins} นาที`;
             if (mins === 0) return `${hours} ชั่วโมง`;
             return `${hours} ชม. ${mins} นาที`;
         }
 
-        // อัพเดทการแสดงผลเวลา
         function updateTimeDisplay(minutes) {
             const el = document.getElementById('onlineTime');
             if (el) {
@@ -316,10 +312,8 @@
             }
         }
 
-        // บันทึกเวลาลง Firebase
         async function saveOnlineTime(userId, totalMinutes) {
             if (!userId) return;
-            
             try {
                 await database.ref('users/' + userId).update({
                     onlineTime: totalMinutes,
@@ -332,70 +326,35 @@
             }
         }
 
-        // เริ่มนับเวลา
         async function startOnlineTimer(userId) {
-            if (onlineTimer) {
-                console.log('⚠️ Timer already running');
-                return;
-            }
+            if (onlineTimer) return;
 
-            // โหลดเวลาเดิม
             const snapshot = await database.ref('users/' + userId + '/onlineTime').once('value');
             lastSavedMinutes = snapshot.val() || 0;
-            
             sessionStartTime = Date.now();
             updateTimeDisplay(lastSavedMinutes);
-            
-            console.log('▶️ Timer started - Previous total:', lastSavedMinutes, 'minutes');
 
-            // อัพเดททุก 30 วินาที
             onlineTimer = setInterval(async () => {
                 const elapsedMs = Date.now() - sessionStartTime;
                 const elapsedMinutes = Math.floor(elapsedMs / 60000);
                 const currentTotal = lastSavedMinutes + elapsedMinutes;
-                
-                // อัพเดท UI ทันที
                 updateTimeDisplay(currentTotal);
-                
-                // บันทึกลง Firebase ทุกนาที
                 if (elapsedMinutes > 0 && elapsedMinutes !== (currentTotal - lastSavedMinutes)) {
                     await saveOnlineTime(userId, currentTotal);
                 }
-            }, 30000); // 30 วินาที
-
-            // บันทึกทันทีเมื่อปิดหน้า
-            window.addEventListener('beforeunload', async () => {
-                await stopOnlineTimer(userId);
-            });
-
-            // บันทึกเมื่อซ่อนหน้า
-            document.addEventListener('visibilitychange', async () => {
-                if (document.hidden && userId) {
-                    const elapsedMs = Date.now() - sessionStartTime;
-                    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-                    if (elapsedMinutes > 0) {
-                        const currentTotal = lastSavedMinutes + elapsedMinutes;
-                        await saveOnlineTime(userId, currentTotal);
-                    }
-                }
-            });
+            }, 30000);
         }
 
-        // หยุดนับเวลา
         async function stopOnlineTimer(userId) {
             if (!onlineTimer) return;
-            
             clearInterval(onlineTimer);
             onlineTimer = null;
-
-            // บันทึกเวลาสุดท้าย
             if (sessionStartTime && userId) {
                 const elapsedMs = Date.now() - sessionStartTime;
                 const elapsedMinutes = Math.floor(elapsedMs / 60000);
                 if (elapsedMinutes > 0) {
                     const finalTotal = lastSavedMinutes + elapsedMinutes;
                     await saveOnlineTime(userId, finalTotal);
-                    console.log('⏹️ Timer stopped - Final total:', finalTotal, 'minutes');
                 }
             }
         }
@@ -413,7 +372,6 @@
             } else if (theme === 'dark') {
                 document.body.classList.add('theme-dark');
             }
-            
             document.querySelectorAll('.theme-selector').forEach(btn => btn.classList.remove('selected'));
             const themeMap = { 'cream': 'themeCream', 'white': 'themeWhite', 'dark': 'themeDark' };
             const selectedBtn = document.getElementById(themeMap[theme]);
@@ -460,7 +418,6 @@
                 window.location.href = 'LoginPage.html';
                 return;
             }
-
             currentUser = user;
             await loadUserProfile(user);
             await startOnlineTimer(user.uid);
@@ -472,11 +429,10 @@
 
             document.getElementById('profileUsername').textContent = userData.username || user.displayName || 'ผู้ใช้';
             document.getElementById('profileEmail').textContent = user.email;
-            
-            // โหลดและแสดงเวลา
+
             const currentTime = userData.onlineTime || 0;
             updateTimeDisplay(currentTime);
-            
+
             document.getElementById('friendCount').textContent = userData.friends ? userData.friends.length : 0;
 
             if (userData.isAdmin) {
@@ -510,51 +466,76 @@
             document.getElementById('avatarInput').click();
         });
 
+        // ===== แก้ไข: อัปโหลดรูปโปรไฟล์ด้วย Base64 แทน Firebase Storage =====
+        // เหตุผล: Firebase Storage ถูกบล็อก CORS จาก Netlify ทำให้อัปโหลดไม่ได้
+        // วิธีแก้: บีบอัดรูปเป็น Base64 แล้วบันทึกลง Realtime Database โดยตรง
+
+        function compressImage(file, maxWidth, maxHeight, quality) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let w = img.width;
+                        let h = img.height;
+                        // ย่อขนาดรูปถ้าใหญ่เกินกำหนด
+                        if (w > maxWidth || h > maxHeight) {
+                            const ratio = Math.min(maxWidth / w, maxHeight / h);
+                            w = Math.round(w * ratio);
+                            h = Math.round(h * ratio);
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w;
+                        canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = () => reject(new Error('โหลดรูปไม่สำเร็จ'));
+                    img.src = ev.target.result;
+                };
+                reader.onerror = () => reject(new Error('อ่านไฟล์ไม่สำเร็จ'));
+                reader.readAsDataURL(file);
+            });
+        }
+
         document.getElementById('avatarInput').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
             if (!file.type.startsWith('image/')) {
-                showToast('กรุณาเลือกไฟล์รูปภาพ', 'error');
+                showToast('กรุณาเลือกไฟล์รูปภาพเท่านั้น', 'error');
                 return;
             }
 
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('ไฟล์ใหญ่เกินไป (สูงสุด 5MB)', 'error');
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('ไฟล์ใหญ่เกินไป (สูงสุด 10MB)', 'error');
                 return;
             }
+
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressText = document.getElementById('progressText');
+            progressDiv.classList.remove('hidden');
+            progressText.textContent = 'กำลังบีบอัด...';
 
             try {
-                const progressDiv = document.getElementById('uploadProgress');
-                const progressText = document.getElementById('progressText');
-                progressDiv.classList.remove('hidden');
+                // บีบอัดรูปเป็น Base64 (max 400x400, quality 75%)
+                const base64 = await compressImage(file, 400, 400, 0.75);
 
-                const storageRef = storage.ref(`avatars/${currentUser.uid}/${Date.now()}_${file.name}`);
-                const uploadTask = storageRef.put(file);
+                progressText.textContent = 'กำลังบันทึก...';
 
-                uploadTask.on('state_changed',
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        progressText.textContent = Math.round(progress) + '%';
-                    },
-                    (error) => {
-                        console.error('Upload error:', error);
-                        showToast('เกิดข้อผิดพลาดในการอัพโหลด', 'error');
-                        progressDiv.classList.add('hidden');
-                    },
-                    async () => {
-                        const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                        await currentUser.updateProfile({ photoURL: downloadURL });
-                        await database.ref('users/' + currentUser.uid).update({ photoURL: downloadURL });
-                        document.getElementById('avatarContainer').innerHTML = 
-                            `<img src="${downloadURL}" alt="Avatar" class="w-full h-full object-cover" />`;
-                        progressDiv.classList.add('hidden');
-                        showToast('อัพโหลดรูปภาพสำเร็จ! 🎉', 'success');
-                    }
-                );
+                // บันทึกลง Realtime Database โดยตรง (ไม่ผ่าน Storage)
+                await database.ref('users/' + currentUser.uid).update({ photoURL: base64 });
+
+                // แสดงรูปใหม่ทันที
+                document.getElementById('avatarContainer').innerHTML =
+                    `<img src="${base64}" alt="Avatar" class="w-full h-full object-cover" />`;
+
+                progressDiv.classList.add('hidden');
+                showToast('อัพโหลดรูปภาพสำเร็จ! 🎉', 'success');
             } catch (error) {
                 console.error('Upload error:', error);
-                showToast('เกิดข้อผิดพลาดในการอัพโหลด', 'error');
+                progressDiv.classList.add('hidden');
+                showToast('เกิดข้อผิดพลาด: ' + error.message, 'error');
             }
         });
 
@@ -681,7 +662,7 @@
             }
         });
 
-        // จัดการเมื่อเปลี่ยน tab
+        // บันทึกเวลาเมื่อซ่อนหน้า
         document.addEventListener('visibilitychange', async () => {
             if (!currentUser) return;
             if (document.hidden) {
@@ -693,10 +674,6 @@
                         await saveOnlineTime(currentUser.uid, currentTotal);
                     }
                 }
-            } else {
-                const snapshot = await database.ref('users/' + currentUser.uid + '/onlineTime').once('value');
-                const currentTime = snapshot.val() || 0;
-                updateTimeDisplay(currentTime);
             }
         });
     </script>
