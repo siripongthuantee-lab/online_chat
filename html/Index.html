@@ -544,14 +544,36 @@
         document.getElementById('closeBannerBtn').addEventListener('click', hideBanner);
 
         (function listenAnnouncements() {
-            let lastSeenKey = localStorage.getItem('lastSeenAnnounce') || '0';
-            database.ref('announcements').orderByChild('timestamp').limitToLast(5).on('child_added', function(snapshot) {
-                const data = snapshot.val();
-                const key = snapshot.key;
-                if (!data || key <= lastSeenKey) return;
-                lastSeenKey = key;
-                showAnnouncementBanner(data, key);
-            });
+            // ใช้ timestamp แทน key เพื่อเปรียบเทียบที่แม่นยำ
+            let lastSeenTs = parseInt(localStorage.getItem('lastSeenAnnounceTs') || '0', 10);
+            let initialized = false;
+
+            database.ref('announcements')
+                .orderByChild('timestamp')
+                .limitToLast(1)
+                .on('child_added', function(snapshot) {
+                    const data = snapshot.val();
+                    const key = snapshot.key;
+                    if (!data || !data.timestamp) return;
+
+                    if (!initialized) {
+                        initialized = true;
+                        // แสดงเฉพาะประกาศที่ยังไม่เคยเห็น
+                        if (data.timestamp > lastSeenTs) {
+                            lastSeenTs = data.timestamp;
+                            localStorage.setItem('lastSeenAnnounceTs', lastSeenTs);
+                            showAnnouncementBanner(data, key);
+                        }
+                        return;
+                    }
+
+                    // ประกาศใหม่ที่เพิ่งเข้ามา
+                    if (data.timestamp > lastSeenTs) {
+                        lastSeenTs = data.timestamp;
+                        localStorage.setItem('lastSeenAnnounceTs', lastSeenTs);
+                        showAnnouncementBanner(data, key);
+                    }
+                });
         })();
 
         // ตรวจสอบการ Login
