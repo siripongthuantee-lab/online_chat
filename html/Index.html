@@ -50,6 +50,128 @@
         .character-animation {
             animation: bounce 2s ease-in-out infinite;
         }
+
+        /* ===== 🔔 Notification Bell ===== */
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            15% { transform: rotate(15deg); }
+            30% { transform: rotate(-15deg); }
+            45% { transform: rotate(10deg); }
+            60% { transform: rotate(-10deg); }
+            75% { transform: rotate(5deg); }
+        }
+        .bell-ring { animation: bellRing 0.6s ease-in-out; }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .badge-pulse { animation: badgePulse 0.4s ease-in-out; }
+
+        /* --- Notification Panel Base --- */
+        .notif-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            width: 340px;
+            background: #fff;
+            color: #111;
+            border: 3px solid #000;
+            border-radius: 16px;
+            box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+            z-index: 9000;
+            overflow: hidden;
+        }
+        .notif-panel.open { display: block; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .notif-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 2px solid #000;
+            background: #FFD93D;
+            color: #111;
+        }
+        .notif-panel-footer {
+            padding: 6px 16px;
+            border-top: 2px solid #e5e7eb;
+            background: #f9fafb;
+        }
+        .notif-item { transition: background 0.15s; }
+        .notif-item:hover { background: #f9f7f0; }
+        .notif-item.unread { border-left: 4px solid #FFD93D; }
+
+        /* --- CREAM theme (default) --- */
+        body.theme-cream .notif-panel,
+        body:not(.theme-white):not(.theme-dark) .notif-panel {
+            background: #fefce8;
+            border-color: #000;
+            color: #111;
+        }
+        body.theme-cream .notif-item:hover,
+        body:not(.theme-white):not(.theme-dark) .notif-item:hover { background: #fef9c3; }
+        body.theme-cream .notif-panel-footer,
+        body:not(.theme-white):not(.theme-dark) .notif-panel-footer { background: #fef3c7; border-color: #d97706; }
+
+        /* --- WHITE theme --- */
+        body.theme-white .notif-panel {
+            background: #fff;
+            border-color: #000;
+            color: #111;
+        }
+        body.theme-white .notif-item:hover { background: #f3f4f6; }
+        body.theme-white .notif-panel-footer { background: #f9fafb; border-color: #e5e7eb; }
+
+        /* --- DARK theme --- */
+        body.theme-dark .notif-panel {
+            background: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+            box-shadow: 6px 6px 0px 0px rgba(100,116,139,0.5) !important;
+        }
+        body.theme-dark .notif-panel-header {
+            background: #0f172a !important;
+            border-color: #475569 !important;
+            color: #FFD93D !important;
+        }
+        body.theme-dark .notif-item:hover { background: #334155 !important; }
+        body.theme-dark .notif-item.unread { border-left-color: #FFD93D !important; }
+        body.theme-dark .notif-panel-footer {
+            background: #0f172a !important;
+            border-color: #334155 !important;
+        }
+        body.theme-dark .notif-panel-footer button { color: #94a3b8 !important; }
+        body.theme-dark .notif-panel-footer button:hover { color: #f87171 !important; }
+        body.theme-dark .notif-item p { color: #e2e8f0 !important; }
+        body.theme-dark .notif-item .text-gray-400 { color: #64748b !important; }
+        body.theme-dark #notifList .text-gray-400 { color: #64748b !important; }
+        body.theme-dark .notif-item.unread { background: #1e3a5f !important; }
+
+        /* ===== 📢 Announcement Banner ===== */
+        @keyframes bannerSlideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        #announcementBanner { animation: bannerSlideDown 0.4s ease-out; }
+
+        /* Banner: type colors per theme */
+        /* -- Light (cream/white) -- */
+        .banner-info    { background: #dbeafe; border-bottom-color: #3b82f6; color: #1e3a8a; }
+        .banner-warning { background: #fef9c3; border-bottom-color: #eab308; color: #713f12; }
+        .banner-success { background: #dcfce7; border-bottom-color: #22c55e; color: #14532d; }
+        .banner-error   { background: #fee2e2; border-bottom-color: #ef4444; color: #7f1d1d; }
+
+        /* -- Dark -- */
+        body.theme-dark .banner-info    { background: #1e3a8a !important; border-bottom-color: #60a5fa !important; color: #bfdbfe !important; }
+        body.theme-dark .banner-warning { background: #78350f !important; border-bottom-color: #fbbf24 !important; color: #fde68a !important; }
+        body.theme-dark .banner-success { background: #14532d !important; border-bottom-color: #4ade80 !important; color: #bbf7d0 !important; }
+        body.theme-dark .banner-error   { background: #7f1d1d !important; border-bottom-color: #f87171 !important; color: #fecaca !important; }
+        body.theme-dark #bannerProgress { background: rgba(255,255,255,0.15) !important; }
+        body.theme-dark #announceCountdown,
+        body.theme-dark #closeBannerBtn { color: inherit !important; border-color: currentColor !important; }
     </style>
 </head>
 <body>
@@ -65,6 +187,27 @@
             <nav class="flex gap-2 items-center flex-wrap">
                 <a href="index.html" class="px-4 py-2 bg-[#FFD93D] border-2 border-black rounded-lg hover:bg-[#ffd000]">🏠 หน้าหลัก</a>
                 <a href="SettingPage.html" class="px-4 py-2 bg-white border-2 border-black rounded-lg hover:bg-gray-100">⚙️ ตั้งค่า</a>
+                <!-- 🔔 Notification Bell -->
+                <div class="relative" id="bellWrapper">
+                    <button id="bellBtn" class="relative w-10 h-10 bg-white border-2 border-black rounded-lg hover:bg-gray-100 flex items-center justify-center text-xl transition-all">
+                        🔔
+                        <span id="bellBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border border-white">0</span>
+                    </button>
+                    <!-- Notification Panel -->
+                    <div class="notif-panel" id="notifPanel">
+                        <div class="notif-panel-header">
+                            <span class="font-bold text-sm">🔔 การแจ้งเตือน</span>
+                            <button id="markAllReadBtn" class="text-xs font-bold hover:underline px-2 py-1 rounded">อ่านทั้งหมด</button>
+                        </div>
+                        <div id="notifList" class="max-h-80 overflow-y-auto divide-y divide-gray-100">
+                            <p class="text-center text-sm py-6" style="opacity:0.45;">ยังไม่มีการแจ้งเตือน</p>
+                        </div>
+                        <div class="notif-panel-footer">
+                            <button id="clearNotifBtn" class="w-full text-xs font-bold py-1">🗑️ ล้างทั้งหมด</button>
+                        </div>
+                    </div>
+                </div>
+
                 <button id="adminBtn" class="px-4 py-2 bg-red-500 text-white border-2 border-black rounded-lg hover:bg-red-600 hidden">🛡️ Admin</button>
                 <button id="logoutBtn" class="px-4 py-2 bg-black text-white border-2 border-black rounded-lg hover:bg-gray-800">ออกจากระบบ</button>
             </nav>
@@ -191,6 +334,22 @@
     <!-- Toast Container -->
     <div id="toastContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
 
+    <!-- 📢 Announcement Banner (slides from top) -->
+    <div id="announcementBanner" style="display:none; position:fixed; top:0; left:0; right:0; z-index:10000;">
+        <div id="announcementInner" class="border-b-4 border-black px-5 py-3 flex items-center gap-3 shadow-lg">
+            <span id="announceIcon" class="text-2xl flex-shrink-0">📢</span>
+            <div class="flex-1 min-w-0">
+                <p id="announceTitleText" class="font-bold text-sm leading-tight"></p>
+                <p id="announceMsgText" class="text-sm leading-snug opacity-90"></p>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <span id="announceCountdown" class="text-xs font-bold opacity-60 tabular-nums">10</span>
+                <button id="closeBannerBtn" class="w-7 h-7 rounded-full border-2 border-current flex items-center justify-center font-bold text-lg leading-none hover:opacity-60 transition-opacity">&times;</button>
+            </div>
+        </div>
+        <div id="bannerProgress" class="h-1 bg-black/20 w-full origin-left" style="transform: scaleX(1); transition: transform 10s linear;"></div>
+    </div>
+
     <!-- Firebase Config -->
     <script src="firebase-config.js"></script>
     <script src="theme.js"></script>
@@ -199,6 +358,201 @@
     <script>
         const auth = firebase.auth();
         const database = firebase.database();
+
+        // ====================================================
+        // 🔔 ระบบกระดิ่งแจ้งเตือน + 📢 ระบบประกาศ Admin
+        // ====================================================
+
+        // --- Notification Storage (localStorage) ---
+        function getNotifs() {
+            try { return JSON.parse(localStorage.getItem('notifs') || '[]'); } catch(e) { return []; }
+        }
+        function saveNotifs(arr) {
+            localStorage.setItem('notifs', JSON.stringify(arr.slice(0, 50)));
+        }
+        function getUnreadCount() {
+            return getNotifs().filter(n => !n.read).length;
+        }
+
+        // --- Update bell badge ---
+        function updateBadge() {
+            const badge = document.getElementById('bellBadge');
+            const count = getUnreadCount();
+            if (count > 0) {
+                badge.textContent = count > 9 ? '9+' : count;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+            }
+        }
+
+        // --- Add notification ---
+        function addNotification(notif) {
+            const notifs = getNotifs();
+            notifs.unshift({ ...notif, id: Date.now() + Math.random(), read: false, time: Date.now() });
+            saveNotifs(notifs);
+            updateBadge();
+            renderNotifList();
+            // Ring animation
+            const bell = document.getElementById('bellBtn');
+            bell.classList.remove('bell-ring');
+            void bell.offsetWidth;
+            bell.classList.add('bell-ring');
+            setTimeout(() => bell.classList.remove('bell-ring'), 700);
+            // Badge pulse
+            const badge = document.getElementById('bellBadge');
+            badge.classList.add('badge-pulse');
+            setTimeout(() => badge.classList.remove('badge-pulse'), 500);
+        }
+
+        // --- Render notification list ---
+        function renderNotifList() {
+            const list = document.getElementById('notifList');
+            const notifs = getNotifs();
+            if (notifs.length === 0) {
+                list.innerHTML = '<p class="text-center text-sm py-6" style="opacity:0.4;">ยังไม่มีการแจ้งเตือน</p>';
+                return;
+            }
+            const typeIcon  = { info:'ℹ️', warning:'⚠️', success:'✅', error:'❌', announce:'📢', system:'🔧' };
+            list.innerHTML = notifs.map((n, i) => `
+                <div class="notif-item px-4 py-3 ${n.read ? '' : 'unread'} cursor-pointer"
+                     onclick="markRead(${i})" style="border-bottom:1px solid rgba(0,0,0,0.06);">
+                    <div class="flex items-start gap-2">
+                        <span class="text-lg flex-shrink-0 mt-0.5">${typeIcon[n.type] || '🔔'}</span>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-xs truncate" style="margin-bottom:2px;">${n.title || ''}</p>
+                            <p class="text-xs opacity-75 line-clamp-2">${n.message || ''}</p>
+                            <p class="text-[10px] opacity-40 mt-1">${timeAgo(n.time)}</p>
+                        </div>
+                        ${n.read ? '' : '<span style="width:8px;height:8px;background:#3b82f6;border-radius:50%;flex-shrink:0;margin-top:6px;display:block;"></span>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function timeAgo(ts) {
+            const diff = Date.now() - ts;
+            if (diff < 60000) return 'เมื่อกี้';
+            if (diff < 3600000) return Math.floor(diff/60000) + ' นาทีที่แล้ว';
+            if (diff < 86400000) return Math.floor(diff/3600000) + ' ชั่วโมงที่แล้ว';
+            return Math.floor(diff/86400000) + ' วันที่แล้ว';
+        }
+
+        window.markRead = function(i) {
+            const notifs = getNotifs();
+            if (notifs[i]) { notifs[i].read = true; saveNotifs(notifs); }
+            updateBadge(); renderNotifList();
+        };
+
+        // --- Bell button click ---
+        document.getElementById('bellBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const panel = document.getElementById('notifPanel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) renderNotifList();
+        });
+
+        // Close panel when click outside
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('bellWrapper').contains(e.target)) {
+                document.getElementById('notifPanel').classList.remove('open');
+            }
+        });
+
+        // Mark all read
+        document.getElementById('markAllReadBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            const notifs = getNotifs().map(n => ({ ...n, read: true }));
+            saveNotifs(notifs);
+            updateBadge(); renderNotifList();
+        });
+
+        // Clear all
+        document.getElementById('clearNotifBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            localStorage.removeItem('notifs');
+            updateBadge(); renderNotifList();
+        });
+
+        // Init badge on load
+        updateBadge();
+
+        // ====================================================
+        // 📢 ระบบรับประกาศจาก Admin (Real-time)
+        // ====================================================
+        let bannerTimer = null;
+        let countdownTimer = null;
+
+        function showAnnouncementBanner(data, key) {
+            const typeConfig = {
+                info:    { cls: 'banner-info',    icon: 'ℹ️'  },
+                warning: { cls: 'banner-warning', icon: '⚠️' },
+                success: { cls: 'banner-success', icon: '✅' },
+                error:   { cls: 'banner-error',   icon: '❌' }
+            };
+            const cfg = typeConfig[data.type] || typeConfig.info;
+
+            const banner = document.getElementById('announcementBanner');
+            const inner  = document.getElementById('announcementInner');
+            // Remove old type classes, add new
+            inner.className = cfg.cls + ' border-b-4 px-5 py-3 flex items-center gap-3 shadow-lg';
+            document.getElementById('announceIcon').textContent = cfg.icon;
+            document.getElementById('announceTitleText').textContent = data.title || '';
+            document.getElementById('announceMsgText').textContent = data.message || '';
+
+            banner.style.display = 'block';
+            document.body.style.paddingTop = (banner.offsetHeight + 4) + 'px';
+
+            // Countdown
+            let sec = 10;
+            const countdownEl = document.getElementById('announceCountdown');
+            const progressEl  = document.getElementById('bannerProgress');
+            countdownEl.textContent = sec;
+            progressEl.style.transition = 'none';
+            progressEl.style.transform = 'scaleX(1)';
+            setTimeout(() => {
+                progressEl.style.transition = 'transform 10s linear';
+                progressEl.style.transform  = 'scaleX(0)';
+            }, 50);
+
+            if (countdownTimer) clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                sec--;
+                countdownEl.textContent = sec;
+                if (sec <= 0) { clearInterval(countdownTimer); }
+            }, 1000);
+
+            if (bannerTimer) clearTimeout(bannerTimer);
+            bannerTimer = setTimeout(hideBanner, 10000);
+
+            localStorage.setItem('lastSeenAnnounce', key);
+
+            // Also add to notification panel
+            addNotification({ type: 'announce', title: '📢 ' + (data.title || 'ประกาศ'), message: data.message || '', time: Date.now() });
+        }
+
+        function hideBanner() {
+            const banner = document.getElementById('announcementBanner');
+            banner.style.display = 'none';
+            document.body.style.paddingTop = '0';
+            if (bannerTimer) clearTimeout(bannerTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+        }
+
+        document.getElementById('closeBannerBtn').addEventListener('click', hideBanner);
+
+        (function listenAnnouncements() {
+            let lastSeenKey = localStorage.getItem('lastSeenAnnounce') || '0';
+            database.ref('announcements').orderByChild('timestamp').limitToLast(5).on('child_added', function(snapshot) {
+                const data = snapshot.val();
+                const key = snapshot.key;
+                if (!data || key <= lastSeenKey) return;
+                lastSeenKey = key;
+                showAnnouncementBanner(data, key);
+            });
+        })();
 
         // ตรวจสอบการ Login
         auth.onAuthStateChanged(async (user) => {
